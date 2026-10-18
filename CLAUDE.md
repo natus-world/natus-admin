@@ -32,6 +32,14 @@ entered Natus), written by hand with SQL — never through the API. Today: the
 owner; his partner next, with the same access. Later hires may get narrower
 roles (`admins.role`).
 
+## Owed: make it private again (owner, 18 Oct 2026)
+
+The repository is **public** because GitHub Pages is free only for public
+repositories on the organisation's plan. Nothing secret is in it — the data
+is guarded by the sign-in and `admins` on the server — but the owner wants
+it private again later: pay GitHub Team (about US$4 a user a month), then
+Settings → General → Change visibility → Make private. Pages keeps working.
+
 ## Running it locally
 
 `pnpm dev` with a `.env.local` holding `VITE_SUPABASE_URL` and
