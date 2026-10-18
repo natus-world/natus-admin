@@ -46,7 +46,9 @@ export function Overview() {
         <Stat label="Usaron la app en 7 días" value={o ? int(o.active_7d) : '…'} />
         <Stat label="Premium que pagan" value={o ? int(o.premium_paying) : '…'} note={o ? `${int(o.premium_gifted)} con Premium regalado` : null} />
         <Stat label="Gasto en IA este mes" value={o ? usd(o.ai_spend_month) : '…'} />
-        <Stat label="Alertas de crisis en 7 días" value={o ? int(o.crisis_alerts_7d) : '…'} />
+        <a className="stat-link" href="#alertas">
+          <Stat label="Alertas de crisis en 7 días" value={o ? int(o.crisis_alerts_7d) : '…'} note="Ver quién y cuándo →" />
+        </a>
         <Stat label="Sesiones sin cuenta" value={o ? int(o.anonymous) : '…'} note="Entraron y no crearon cuenta" />
       </div>
 
@@ -110,7 +112,14 @@ export function Overview() {
           {spend.error && <ErrorNote>{spend.error}</ErrorNote>}
         </Section>
 
-        <Section title="Alertas de crisis">
+        <Section
+          title="Alertas de crisis"
+          aside={
+            <a className="link small" href="#alertas">
+              Ver quién y cuándo →
+            </a>
+          }
+        >
           {crisis.loading ? (
             <Loading />
           ) : (
@@ -140,7 +149,6 @@ export function Overview() {
               </tbody>
             </table>
           )}
-          <p className="note">Quién y qué escribió está en la ficha de cada persona, en «Alertas de crisis».</p>
           {crisis.error && <ErrorNote>{crisis.error}</ErrorNote>}
         </Section>
       </div>

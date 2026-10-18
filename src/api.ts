@@ -44,6 +44,21 @@ export type Person = {
   plan: 'free' | 'premium' | 'gift';
   last_opened: string | null;
 };
+export type CrisisAlert = {
+  id: string;
+  user_id: string;
+  has_account: boolean;
+  name: string | null;
+  email: string | null;
+  at: string;
+  severity: 'low' | 'high';
+  category: string;
+  surface: string;
+  matched: string[];
+  excerpt: string;
+  from_clinical: boolean;
+  not_their_case: boolean | null;
+};
 export type InboxRow = {
   user_id: string;
   email: string | null;
@@ -85,6 +100,7 @@ export const api = {
     call<{ detail: string; people: number }[]>('admin_funnel_detail', { p_step: step, p_from: from, p_to: to }),
   spend: (days: number) => call<Spend[]>('admin_ai_spend', { p_days: days }),
   crisis: (days: number) => call<Crisis[]>('admin_crisis_counts', { p_days: days }),
+  crisisList: (days: number) => call<CrisisAlert[]>('admin_crisis_list', { p_days: days }),
   people: (query: string) => call<Person[]>('admin_people', { p_query: query, p_limit: 200 }),
   person: (id: string) => call<Record<string, unknown>>('admin_person', { p_user: id }),
   content: (id: string, kind: ContentKind) =>

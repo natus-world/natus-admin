@@ -738,3 +738,46 @@ textarea:focus {
   outline: 2px solid rgb(236 226 208 / 0.6);
   outline-offset: 2px;
 }
+
+/* ── Crisis alerts ──────────────────────────────────────────────────── */
+
+.alert-item {
+  display: grid;
+  gap: 10px;
+}
+
+.alert-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.alert-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.excerpt {
+  margin: 0;
+  padding: 10px 14px;
+  border-left: 2px solid var(--alert);
+  background: var(--panel-2);
+  border-radius: 0 8px 8px 0;
+  font: 400 15px/1.5 var(--sans);
+}
+
+.stat-link {
+  text-decoration: none;
+  color: inherit;
+  display: grid;
+}
+
+.stat-link:hover .stat {
+  border-color: var(--line-strong);
+}
+
+.stat-link .stat-note {
+  color: var(--ink-2);
+}
