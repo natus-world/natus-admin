@@ -59,6 +59,19 @@ export type CrisisAlert = {
   from_clinical: boolean;
   not_their_case: boolean | null;
 };
+export type Expense = {
+  id: string;
+  service: string;
+  purpose: string;
+  plan: string;
+  amount_usd: number | null;
+  frequency: 'monthly' | 'yearly' | 'usage' | 'once';
+  status: 'active' | 'to_buy' | 'canceled';
+  paid_by: 'personal' | 'company' | 'free';
+  since: string | null;
+  notes: string;
+  updated_at: string;
+};
 export type InboxRow = {
   user_id: string;
   email: string | null;
@@ -100,6 +113,10 @@ export const api = {
     call<{ detail: string; people: number }[]>('admin_funnel_detail', { p_step: step, p_from: from, p_to: to }),
   spend: (days: number) => call<Spend[]>('admin_ai_spend', { p_days: days }),
   crisis: (days: number) => call<Crisis[]>('admin_crisis_counts', { p_days: days }),
+  expenses: () => call<Expense[]>('admin_expenses'),
+  saveExpense: (id: string | null, e: Record<string, unknown>) =>
+    call<string>('admin_expense_save', { p_id: id, p: e }),
+  deleteExpense: (id: string) => call<null>('admin_expense_delete', { p_id: id }),
   crisisList: (days: number) => call<CrisisAlert[]>('admin_crisis_list', { p_days: days }),
   people: (query: string) => call<Person[]>('admin_people', { p_query: query, p_limit: 200 }),
   person: (id: string) => call<Record<string, unknown>>('admin_person', { p_user: id }),
