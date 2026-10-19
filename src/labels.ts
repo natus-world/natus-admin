@@ -48,6 +48,7 @@ export const PURPOSE: Record<string, string> = {
   comparison: 'Comparar cartas',
   memory: 'Memoria',
   chart_points: 'Lectura de la carta',
+  daily_tip: 'Tip del día',
 };
 
 export const SURFACE: Record<string, string> = {
