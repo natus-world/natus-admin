@@ -40,6 +40,12 @@ is guarded by the sign-in and `admins` on the server — but the owner wants
 it private again later: pay GitHub Team (about US$4 a user a month), then
 Settings → General → Change visibility → Make private. Pages keeps working.
 
+## Tab icon (owner, 19 Oct 2026)
+
+`public/favicon.svg` is the snake's head cut from the ouroboros, cream in
+dark and green in light, so the panel is told apart from the app (gold N)
+and the website (plain N) among open tabs.
+
 ## Running it locally
 
 `pnpm dev` with a `.env.local` holding `VITE_SUPABASE_URL` and
