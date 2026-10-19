@@ -35,6 +35,7 @@ export const PAYWALL_PLACE: Record<string, string> = {
   meditation: 'En meditaciones',
   comparison: 'En comparar cartas',
   profile: 'En su perfil',
+  tip: 'En el tip de Hoy',
   '': 'Sin lugar',
 };
 
