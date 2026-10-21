@@ -2,15 +2,23 @@
 
 export type Step = { key: string; label: string; hint?: string };
 
-/** The onboarding, in the order a person walks it (18 Oct 2026). */
+/**
+ * The onboarding, in the order a person walks it: since the reorder of
+ * 20–21 Oct 2026 the map's preview comes before the account, and «Cómo
+ * trabajar» after it, right before «Para cuidarte».
+ */
 export const ONBOARDING: Step[] = [
   { key: 'onboarding_started', label: 'Empezó' },
   { key: 'birth_data_done', label: 'Datos de nacimiento' },
   { key: 'need_done', label: 'Escribió su pregunta', hint: 'Cuenta desde el 18 de octubre' },
-  { key: 'openness_done', label: 'Respondió la apertura', hint: 'Cuenta desde el 18 de octubre' },
   { key: 'soul_map_seen', label: 'Su mapa quedó escrito' },
-  { key: 'signup_seen', label: 'Llegó a la pantalla de Google', hint: 'Cuenta desde el 18 de octubre' },
+  { key: 'signup_seen', label: 'Llegó a guardar su mapa', hint: 'Después del adelanto de su mapa' },
   { key: 'account_created', label: 'Creó su cuenta' },
+  {
+    key: 'openness_done',
+    label: 'Respondió cómo trabajar',
+    hint: 'Antes de la cuenta hasta el cambio de orden; después, desde entonces',
+  },
   { key: 'care_done', label: 'Respondió las preguntas de cuidado' },
   { key: 'paths_seen', label: 'Vio sus caminos' },
 ];
@@ -30,7 +38,7 @@ export const MONEY: Step[] = [
 ];
 
 export const PAYWALL_PLACE: Record<string, string> = {
-  welcome: 'Después de su mapa',
+  welcome: 'Al terminar el ingreso',
   chat: 'En el chat',
   meditation: 'En meditaciones',
   comparison: 'En comparar cartas',
