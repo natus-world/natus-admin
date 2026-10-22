@@ -116,6 +116,12 @@ export const api = {
   funnelBySource: (from: string, to: string) =>
     call<{ source: string; step: string; people: number }[]>('admin_funnel_by_source', { p_from: from, p_to: to }),
   hourly: (day: string) => call<Hourly[]>('admin_hourly', { p_day: day }),
+  stepTimes: (steps: string[], from: string, to: string) =>
+    call<{ step: string; people: number; median_seconds: number }[]>('admin_step_times', {
+      p_steps: steps,
+      p_from: from,
+      p_to: to,
+    }),
   dailyRange: (from: string, to: string) => call<Daily[]>('admin_daily_range', { p_from: from, p_to: to }),
   spendRange: (from: string, to: string) => call<Spend[]>('admin_ai_spend_range', { p_from: from, p_to: to }),
   crisisRange: (from: string, to: string) => call<Crisis[]>('admin_crisis_counts_range', { p_from: from, p_to: to }),

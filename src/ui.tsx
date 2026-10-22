@@ -135,15 +135,38 @@ export function DayBars({ rows, format = int }: {
 }
 
 /** A funnel: one row per step, the bar against the first step. */
-export function FunnelRows({ rows }: { rows: { label: string; hint?: string | undefined; people: number }[] }) {
+/** «1 min 50 s», «3 h 05 min», «2 d 4 h»: a median time between two steps. */
+export function duration(seconds: number): string {
+  const s = Math.round(seconds);
+  if (s < 60) return `${s} s`;
+  if (s < 3600) return `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, '0')} s`;
+  if (s < 86_400) return `${Math.floor(s / 3600)} h ${String(Math.floor((s % 3600) / 60)).padStart(2, '0')} min`;
+  return `${Math.floor(s / 86_400)} d ${Math.floor((s % 86_400) / 3600)} h`;
+}
+
+export type FunnelRow = {
+  label: string;
+  hint?: string | undefined;
+  people: number;
+  /** The same step in the period before, when comparing. */
+  prev?: number | undefined;
+  /** Median seconds from the step before. */
+  seconds?: number | undefined;
+};
+
+export function FunnelRows({ rows, comparing = false }: { rows: FunnelRow[]; comparing?: boolean }) {
   const first = rows[0]?.people ?? 0;
+  const firstPrev = rows[0]?.prev ?? 0;
+  // One scale for both periods, so the bars can be compared by eye.
+  const top = Math.max(first, comparing ? firstPrev : 0, 1);
   return (
     <ol className="funnel">
       {rows.map((r, i) => {
-        const prev = i === 0 ? null : rows[i - 1]!.people;
-        const ofFirst = first > 0 ? (r.people / first) * 100 : 0;
-        const ofPrev = prev && prev > 0 ? (r.people / prev) * 100 : null;
-        const lost = prev !== null ? prev - r.people : null;
+        const prevStep = i === 0 ? null : rows[i - 1]!.people;
+        const ofPrev = prevStep && prevStep > 0 ? (r.people / prevStep) * 100 : null;
+        const lost = prevStep !== null ? prevStep - r.people : null;
+        const before = rows[i - 1]?.prev;
+        const ofPrevThen = comparing && i > 0 && before && before > 0 && r.prev !== undefined ? (r.prev / before) * 100 : null;
         return (
           <li key={r.label}>
             <div className="funnel-text">
@@ -163,8 +186,30 @@ export function FunnelRows({ rows }: { rows: { label: string; hint?: string | un
               </span>
             </div>
             <div className="funnel-track">
-              <span style={{ width: `${Math.min(100, ofFirst)}%` }} />
+              {comparing && r.prev !== undefined && (
+                <i className="funnel-ghost" style={{ width: `${Math.min(100, (r.prev / top) * 100)}%` }} />
+              )}
+              <span style={{ width: `${Math.min(100, (r.people / top) * 100)}%` }} />
             </div>
+            {(comparing || r.seconds !== undefined) && (
+              <p className="funnel-meta muted">
+                {comparing && r.prev !== undefined && (
+                  <>
+                    Periodo anterior: {int(r.prev)}
+                    {ofPrevThen !== null && ` · ${Math.round(ofPrevThen)}% del paso anterior`}
+                    {ofPrev !== null && ofPrevThen !== null && (
+                      <span className={ofPrev >= ofPrevThen ? 'up' : 'drop'}>
+                        {' '}
+                        ({ofPrev >= ofPrevThen ? '+' : '−'}
+                        {Math.abs(Math.round(ofPrev - ofPrevThen))} puntos)
+                      </span>
+                    )}
+                  </>
+                )}
+                {comparing && r.prev !== undefined && r.seconds !== undefined && ' · '}
+                {r.seconds !== undefined && <>Tardan {duration(r.seconds)} desde el paso anterior (mediana)</>}
+              </p>
+            )}
           </li>
         );
       })}

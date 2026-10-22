@@ -572,9 +572,35 @@ textarea:focus {
 }
 
 .funnel-track {
+  position: relative;
   height: 10px;
   background: var(--panel-2);
   border-radius: 4px;
+}
+
+/* The period before, behind the bar: an outline, not a second colour. */
+.funnel-ghost {
+  position: absolute;
+  inset: -3px auto -3px 0;
+  border: 1px solid var(--ink-3, rgb(236 226 208 / 0.45));
+  border-radius: 5px;
+}
+
+.funnel-track span {
+  position: relative;
+}
+
+.funnel-meta {
+  margin: 6px 0 0;
+  font-size: 12px;
+}
+
+.funnel-meta .up {
+  color: var(--ok, #9cc3a6);
+}
+
+.funnel-meta .drop {
+  color: var(--alert);
 }
 
 .funnel-track span {
@@ -873,4 +899,17 @@ textarea:focus {
   .seg {
     flex-wrap: wrap;
   }
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.check input {
+  width: auto;
+  accent-color: var(--ink);
 }
