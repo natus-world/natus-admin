@@ -10,6 +10,7 @@ import { Suggestions } from './sections/Suggestions';
 import { Gift } from './sections/Gift';
 import { Alerts } from './sections/Alerts';
 import { Expenses } from './sections/Expenses';
+import { Use } from './sections/Use';
 
 /**
  * The sections of the panel. Adding one is one entry here and its file in
@@ -21,6 +22,7 @@ type Nav = { open: (r: Route) => void };
 const SECTIONS: { key: string; label: string; render: (route: Route, nav: Nav) => ReactNode }[] = [
   { key: 'resumen', label: 'Resumen', render: () => <Overview /> },
   { key: 'embudo', label: 'Embudos', render: () => <Funnel /> },
+  { key: 'uso', label: 'Uso y retención', render: () => <Use /> },
   {
     key: 'personas',
     label: 'Personas',

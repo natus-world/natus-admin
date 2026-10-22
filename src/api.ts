@@ -35,6 +35,25 @@ export type Overview = {
 
 export type Daily = { day: string; accounts: number; started: number; opened: number };
 export type Hourly = { hour: number; started: number; map_seen: number; accounts: number };
+export type Retention = {
+  week_start: string;
+  accounts: number;
+  activated: number;
+  back_d1: number;
+  back_w1: number;
+  back_w2: number;
+  back_m1: number;
+  back_after: number;
+};
+export type WeeklyUse = {
+  week_start: string;
+  active: number;
+  practices: number;
+  chat: number;
+  journal: number;
+  meditations: number;
+  comparisons: number;
+};
 export type Spend = { day: string; purpose: string; calls: number; failed: number; cost_usd: number };
 export type Crisis = { day: string; severity: string; surface: string; alerts: number; not_their_case: number };
 export type Person = {
@@ -116,6 +135,10 @@ export const api = {
   funnelBySource: (from: string, to: string) =>
     call<{ source: string; step: string; people: number }[]>('admin_funnel_by_source', { p_from: from, p_to: to }),
   hourly: (day: string) => call<Hourly[]>('admin_hourly', { p_day: day }),
+  retention: (weeks: number) => call<Retention[]>('admin_retention', { p_weeks: weeks }),
+  firstAction: (from: string, to: string) =>
+    call<{ action: string; people: number }[]>('admin_first_action', { p_from: from, p_to: to }),
+  weeklyUse: (weeks: number) => call<WeeklyUse[]>('admin_weekly_use', { p_weeks: weeks }),
   stepTimes: (steps: string[], from: string, to: string) =>
     call<{ step: string; people: number; median_seconds: number }[]>('admin_step_times', {
       p_steps: steps,
