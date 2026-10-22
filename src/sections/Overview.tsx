@@ -9,6 +9,7 @@ export function Overview() {
   const [period, setPeriod] = useState(() => presetPeriod('30'));
   const { from, to } = period;
   const overview = useAsync(() => api.overview(), []);
+  const pending = useAsync(() => api.pending(), []);
   const daily = useAsync(() => api.dailyRange(from, to), [from, to]);
   const spend = useAsync(() => api.spendRange(from, to), [from, to]);
   const crisis = useAsync(() => api.crisisRange(from, to), [from, to]);
@@ -52,6 +53,48 @@ export function Overview() {
       </div>
 
       <p className="note">Sin el equipo (admins) ni el robot de pruebas.</p>
+
+      <Section title="Pendientes del equipo">
+        {pending.error && <ErrorNote>{pending.error}</ErrorNote>}
+        {!pending.data ? (
+          pending.loading && <Loading />
+        ) : (
+          <table className="table">
+            <tbody>
+              <tr>
+                <td>
+                  <a className="link" href="#sugerencias">
+                    Sugerencias sin leer
+                  </a>
+                </td>
+                <td className="num">{int(Number(pending.data.unread_suggestions))}</td>
+              </tr>
+              <tr>
+                <td>
+                  <a className="link" href="#alertas">
+                    Alertas de crisis en 7 días
+                  </a>{' '}
+                  <span className="muted small">(sin las marcadas «no es mi caso»)</span>
+                </td>
+                <td className="num">{int(Number(pending.data.crisis_7d))}</td>
+              </tr>
+              <tr>
+                <td>
+                  Errores de la app en 7 días
+                  {pending.data.top_error_path && (
+                    <span className="muted small"> · el más repetido en {pending.data.top_error_path}</span>
+                  )}
+                </td>
+                <td className="num">{int(Number(pending.data.app_errors_7d))}</td>
+              </tr>
+              <tr>
+                <td>Pagos rechazados o suspendidos en 7 días</td>
+                <td className="num">{int(Number(pending.data.payment_failures_7d))}</td>
+              </tr>
+            </tbody>
+          </table>
+        )}
+      </Section>
 
       <div className="row-between">
         <h2 className="h-section">Hora por hora</h2>

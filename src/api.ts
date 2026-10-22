@@ -35,6 +35,29 @@ export type Overview = {
 
 export type Daily = { day: string; accounts: number; started: number; opened: number };
 export type Hourly = { hour: number; started: number; map_seen: number; accounts: number };
+export type Pending = {
+  unread_suggestions: number;
+  app_errors_7d: number;
+  top_error_path: string | null;
+  crisis_7d: number;
+  payment_failures_7d: number;
+};
+export type PersonSummary = {
+  need: string | null;
+  topics: string[] | null;
+  openness: string[] | null;
+  works: { title: string; avg: number; times: number }[];
+  low_rated: { title: string; avg: number }[];
+  marked: number;
+  dismissed: { slug: string; at: string }[];
+  saved: string[];
+  proposals: { accepted: number; total: number };
+  memory: { category: string; content: string }[];
+  memory_count: number;
+  chat_month: number;
+  chat_hour: number | null;
+  first_value_at: string | null;
+};
 export type Retention = {
   week_start: string;
   accounts: number;
@@ -135,6 +158,8 @@ export const api = {
   funnelBySource: (from: string, to: string) =>
     call<{ source: string; step: string; people: number }[]>('admin_funnel_by_source', { p_from: from, p_to: to }),
   hourly: (day: string) => call<Hourly[]>('admin_hourly', { p_day: day }),
+  pending: async () => one(await call<Pending[]>('admin_pending')),
+  personSummary: (id: string) => call<PersonSummary>('admin_person_summary', { p_user: id }),
   retention: (weeks: number) => call<Retention[]>('admin_retention', { p_weeks: weeks }),
   firstAction: (from: string, to: string) =>
     call<{ action: string; people: number }[]>('admin_first_action', { p_from: from, p_to: to }),

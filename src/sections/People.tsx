@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react';
-import { api, type ContentKind } from '../api';
+import { api, type ContentKind, type PersonSummary } from '../api';
 import { date, dateTime, int, usd } from '../format';
-import { KINDS, ONBOARDING, MONEY, USE, PAYWALL_PLACE, PLAN, label } from '../labels';
+import { BIRTH_HOUR, KINDS, ONBOARDING, MONEY, SOURCE, USE, PAYWALL_PLACE, PLAN, deviceLabel, label } from '../labels';
 import { ErrorNote, Loading, Section, Value, messageOf, useAsync } from '../ui';
 
 const STEP_LABEL: Record<string, string> = Object.fromEntries(
-  [...ONBOARDING, ...USE, ...MONEY, { key: 'app_opened', label: 'Abrió la app' }].map((s) => [s.key, s.label]),
+  [
+    ...ONBOARDING,
+    ...USE,
+    ...MONEY,
+    { key: 'app_opened', label: 'Abrió la app' },
+    { key: 'birth_city_not_found', label: 'Escribió una ciudad que no apareció' },
+  ].map((s) => [s.key, s.label]),
 );
 
 export function People({ open, onOpen }: { open: string | null; onOpen: (id: string | null) => void }) {
@@ -161,14 +167,21 @@ function PersonView({ id, onBack }: { id: string; onBack: () => void }) {
             </div>
           </div>
 
+          <Adapt id={id} />
+
           <Section title="Su recorrido">
             <ol className="timeline">
               {((p['steps'] as Record_[] | undefined) ?? []).map((s, i) => (
                 <li key={i}>
                   <span className="muted">{dateTime(str(s['at']))}</span>{' '}
                   {STEP_LABEL[str(s['step'])] ?? str(s['step'])}
-                  {s['detail'] ? <span className="muted"> · {label(PAYWALL_PLACE, str(s['detail']))}</span> : null}
-                  {s['source'] ? <span className="muted"> · llegó desde {str(s['source'])} {str(s['campaign'])}</span> : null}
+                  {s['detail'] ? <span className="muted"> · {stepDetail(str(s['step']), str(s['detail']))}</span> : null}
+                  {s['source'] ? (
+                    <span className="muted">
+                      {' '}
+                      · llegó desde {label(SOURCE, str(s['source']))} {str(s['campaign'])}
+                    </span>
+                  ) : null}
                 </li>
               ))}
             </ol>
@@ -323,5 +336,82 @@ function Content({ id, kind }: { id: string; kind: ContentKind }) {
         </article>
       ))}
     </div>
+  );
+}
+
+function stepDetail(step: string, detail: string): string {
+  if (step === 'onboarding_started') return deviceLabel(detail);
+  if (step === 'birth_data_done') return label(BIRTH_HOUR, detail);
+  return label(PAYWALL_PLACE, detail);
+}
+
+const prettySlug = (slug: string) => {
+  const t = slug.replace(/-/g, ' ');
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};
+
+/** What Davraz could adapt to, in one look (owner, 22 Oct 2026). Opening it is logged. */
+function Adapt({ id }: { id: string }) {
+  const summary = useAsync(() => api.personSummary(id), [id]);
+  const a: PersonSummary | undefined = summary.data;
+  return (
+    <Section title="Para que Davraz se adapte">
+      {summary.error && <ErrorNote>{summary.error}</ErrorNote>}
+      {!a ? (
+        summary.loading && <Loading />
+      ) : (
+        <dl className="facts">
+          <dt>Lo que le trae</dt>
+          <dd>
+            {a.need ? <span className="pre">{a.need}</span> : <span className="muted">—</span>}
+            {a.topics && a.topics.length > 0 && <span className="muted"> · {a.topics.map(prettySlug).join(', ')}</span>}
+          </dd>
+          <dt>Abierta a</dt>
+          <dd>{a.openness && a.openness.length > 0 ? a.openness.map(prettySlug).join(', ') : <span className="muted">—</span>}</dd>
+          <dt>Le funciona</dt>
+          <dd>
+            {a.works.length > 0 ? (
+              a.works.map((w) => `${w.title} (${String(w.avg).replace('.', ',')} de 5, ${w.times} ${w.times === 1 ? 'vez' : 'veces'})`).join(' · ')
+            ) : (
+              <span className="muted">
+                {a.marked > 0 ? `Marcó ${int(a.marked)} prácticas; ninguna con 4 o 5 todavía` : 'Todavía no califica prácticas'}
+              </span>
+            )}
+          </dd>
+          <dt>No le funciona</dt>
+          <dd>
+            {[
+              ...a.low_rated.map((w) => `${w.title} (${String(w.avg).replace('.', ',')} de 5)`),
+              ...a.dismissed.map((d) => `${prettySlug(d.slug)}: «No me hace sentido» (${date(d.at)})`),
+            ].join(' · ') || <span className="muted">—</span>}
+          </dd>
+          <dt>Guardó</dt>
+          <dd>{a.saved.length > 0 ? a.saved.map(prettySlug).join(', ') : <span className="muted">—</span>}</dd>
+          <dt>Rutina</dt>
+          <dd>
+            {a.proposals.total > 0
+              ? `Aceptó ${a.proposals.accepted} de ${a.proposals.total} propuestas de cambio`
+              : <span className="muted">Sin propuestas de cambio respondidas</span>}
+          </dd>
+          <dt>Lo que Natus sabe</dt>
+          <dd>
+            {a.memory_count > 0 ? (
+              <>
+                {int(a.memory_count)} recuerdos · {a.memory.slice(0, 4).map((m) => `«${m.content}»`).join(' · ')}
+              </>
+            ) : (
+              <span className="muted">Nada todavía (la memoria necesita Premium y su permiso)</span>
+            )}
+          </dd>
+          <dt>Cómo usa el chat</dt>
+          <dd>
+            {int(a.chat_month)} {a.chat_month === 1 ? 'mensaje' : 'mensajes'} este mes
+            {a.chat_hour !== null && ` · escribe más a las ${String(a.chat_hour).padStart(2, '0')}:00`}
+          </dd>
+          <dt>Activada</dt>
+          <dd>{a.first_value_at ? `Sí, desde el ${date(a.first_value_at)}` : <span className="muted">Todavía no</span>}</dd>
+        </dl>
+      )}
+    </Section>
   );
 }
