@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { AdminError } from './api';
-import { int } from './format';
+import { dayIso, int } from './format';
 
 /** Loads once per key change; `reload` asks again. */
 export function useAsync<T>(load: () => Promise<T>, deps: unknown[]): {
@@ -183,5 +183,89 @@ export function Value({ value }: { value: unknown }) {
       <summary>Ver datos</summary>
       <pre>{JSON.stringify(value, null, 2)}</pre>
     </details>
+  );
+}
+
+/** The first day the funnel has data (15 Oct 2026): «Todo» starts here. */
+export const FIRST_DAY = '2026-10-15';
+
+export type Period = { key: string; from: string; to: string };
+
+const PRESETS: { key: string; label: string; days: number | null }[] = [
+  { key: 'hoy', label: 'Hoy', days: 1 },
+  { key: '7', label: '7 días', days: 7 },
+  { key: '30', label: '30 días', days: 30 },
+  { key: '90', label: '90 días', days: 90 },
+  { key: 'todo', label: 'Todo', days: null },
+];
+
+export function presetPeriod(key: string): Period {
+  const p = PRESETS.find((x) => x.key === key) ?? PRESETS[2]!;
+  return { key: p.key, from: p.days === null ? FIRST_DAY : dayIso(p.days - 1), to: dayIso(0) };
+}
+
+/** The same number of days, right before. */
+export function previousPeriod(p: Period): Period {
+  const day = 86_400_000;
+  const from = new Date(`${p.from}T12:00:00Z`).getTime();
+  const to = new Date(`${p.to}T12:00:00Z`).getTime();
+  const length = Math.round((to - from) / day) + 1;
+  const iso = (t: number) => new Date(t).toISOString().slice(0, 10);
+  return { key: 'prev', from: iso(from - length * day), to: iso(from - day) };
+}
+
+/** Quick ranges, plus any dates: «Desde» and «Hasta» (the same day for one day). */
+export function PeriodPicker({ value, onChange }: { value: Period; onChange: (p: Period) => void }) {
+  const custom = value.key === 'fechas';
+  return (
+    <div className="period">
+      <div className="seg" role="radiogroup">
+        {PRESETS.map((p) => (
+          <button
+            key={p.key}
+            type="button"
+            role="radio"
+            aria-checked={value.key === p.key}
+            className={value.key === p.key ? 'on' : ''}
+            onClick={() => onChange(presetPeriod(p.key))}
+          >
+            {p.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          role="radio"
+          aria-checked={custom}
+          className={custom ? 'on' : ''}
+          onClick={() => onChange({ ...value, key: 'fechas' })}
+        >
+          Elegir fechas
+        </button>
+      </div>
+      {custom && (
+        <div className="period-dates">
+          <label>
+            <span className="muted small">Desde</span>
+            <input
+              type="date"
+              value={value.from}
+              min={FIRST_DAY}
+              max={value.to}
+              onChange={(e) => e.target.value && onChange({ key: 'fechas', from: e.target.value, to: value.to })}
+            />
+          </label>
+          <label>
+            <span className="muted small">Hasta</span>
+            <input
+              type="date"
+              value={value.to}
+              min={value.from}
+              max={dayIso(0)}
+              onChange={(e) => e.target.value && onChange({ key: 'fechas', from: value.from, to: e.target.value })}
+            />
+          </label>
+        </div>
+      )}
+    </div>
   );
 }

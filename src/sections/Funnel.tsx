@@ -1,21 +1,13 @@
 import { useState } from 'react';
 import { api } from '../api';
-import { dayIso, int } from '../format';
+import { int } from '../format';
 import { BIRTH_HOUR, MONEY, ONBOARDING, PAYWALL_PLACE, SOURCE, USE, deviceLabel, label, type Step } from '../labels';
-import { ErrorNote, FunnelRows, Loading, Range, Section, useAsync } from '../ui';
+import { ErrorNote, FunnelRows, Loading, PeriodPicker, Section, presetPeriod, useAsync } from '../ui';
 
-const RANGES = [
-  { days: 1, label: 'Hoy' },
-  { days: 7, label: '7 días' },
-  { days: 30, label: '30 días' },
-  { days: 90, label: '90 días' },
-  { days: 3650, label: 'Todo' },
-];
 
 export function Funnel() {
-  const [days, setDays] = useState(30);
-  const from = dayIso(days - 1);
-  const to = dayIso(0);
+  const [period, setPeriod] = useState(() => presetPeriod('30'));
+  const { from, to } = period;
   const funnel = useAsync(() => api.funnel(from, to), [from, to]);
   const places = useAsync(() => api.funnelDetail('paywall_seen', from, to), [from, to]);
   const bySource = useAsync(() => api.funnelBySource(from, to), [from, to]);
@@ -31,7 +23,7 @@ export function Funnel() {
           Personas distintas que dieron cada paso en el rango. Una persona cuenta una vez por paso. Sin el equipo ni el
           robot de pruebas.
         </p>
-        <Range value={days} onChange={setDays} options={RANGES} />
+        <PeriodPicker value={period} onChange={setPeriod} />
       </div>
       {funnel.error && <ErrorNote>{funnel.error}</ErrorNote>}
       <Section title="Onboarding: dónde se va la gente">

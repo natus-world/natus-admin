@@ -834,3 +834,43 @@ textarea:focus {
   color: var(--alert);
   border-color: rgb(226 179 147 / 0.5);
 }
+
+/* Quick ranges and any dates (22 Oct 2026). */
+.period {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.period-dates {
+  display: flex;
+  gap: 10px;
+}
+.period-dates label {
+  display: grid;
+  gap: 4px;
+}
+.period-dates input {
+  width: auto;
+  padding: 7px 10px;
+  color-scheme: dark;
+}
+.day-pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.day-pick input {
+  width: auto;
+  padding: 7px 10px;
+  color-scheme: dark;
+}
+@media (max-width: 640px) {
+  .period {
+    justify-content: flex-start;
+  }
+  .seg {
+    flex-wrap: wrap;
+  }
+}

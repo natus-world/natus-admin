@@ -2,22 +2,18 @@ import { useState } from 'react';
 import { api, type Hourly } from '../api';
 import { dayIso, int, shortDay, usd } from '../format';
 import { PURPOSE, SURFACE, label } from '../labels';
-import { DayBars, ErrorNote, Loading, Range, Section, Stat, useAsync } from '../ui';
+import { DayBars, ErrorNote, Loading, PeriodPicker, Section, Stat, FIRST_DAY, presetPeriod, useAsync } from '../ui';
 
-const RANGES = [
-  { days: 7, label: '7 días' },
-  { days: 30, label: '30 días' },
-  { days: 90, label: '90 días' },
-];
 
 export function Overview() {
-  const [days, setDays] = useState(30);
+  const [period, setPeriod] = useState(() => presetPeriod('30'));
+  const { from, to } = period;
   const overview = useAsync(() => api.overview(), []);
-  const daily = useAsync(() => api.daily(days), [days]);
-  const spend = useAsync(() => api.spend(days), [days]);
-  const crisis = useAsync(() => api.crisis(days), [days]);
-  const [hoursAgo, setHoursAgo] = useState(0);
-  const hourly = useAsync(() => api.hourly(dayIso(hoursAgo)), [hoursAgo]);
+  const daily = useAsync(() => api.dailyRange(from, to), [from, to]);
+  const spend = useAsync(() => api.spendRange(from, to), [from, to]);
+  const crisis = useAsync(() => api.crisisRange(from, to), [from, to]);
+  const [hourDay, setHourDay] = useState(() => dayIso(0));
+  const hourly = useAsync(() => api.hourly(hourDay), [hourDay]);
   const o = overview.data;
 
   const spendByDay = new Map<string, number>();
@@ -59,14 +55,33 @@ export function Overview() {
 
       <div className="row-between">
         <h2 className="h-section">Hora por hora</h2>
-        <Range
-          value={hoursAgo}
-          onChange={setHoursAgo}
-          options={[
-            { days: 0, label: 'Hoy' },
-            { days: 1, label: 'Ayer' },
-          ]}
-        />
+        <div className="day-pick">
+          <div className="seg" role="radiogroup">
+            {[
+              { label: 'Hoy', day: dayIso(0) },
+              { label: 'Ayer', day: dayIso(1) },
+            ].map((o) => (
+              <button
+                key={o.label}
+                type="button"
+                role="radio"
+                aria-checked={hourDay === o.day}
+                className={hourDay === o.day ? 'on' : ''}
+                onClick={() => setHourDay(o.day)}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+          <input
+            type="date"
+            aria-label="Otro día"
+            value={hourDay}
+            min={FIRST_DAY}
+            max={dayIso(0)}
+            onChange={(e) => e.target.value && setHourDay(e.target.value)}
+          />
+        </div>
       </div>
       <Section title="Empezaron, vieron su mapa y crearon cuenta">
         {hourly.error && <ErrorNote>{hourly.error}</ErrorNote>}
@@ -79,7 +94,7 @@ export function Overview() {
 
       <div className="row-between">
         <h2 className="h-section">Por día</h2>
-        <Range value={days} onChange={setDays} options={RANGES} />
+        <PeriodPicker value={period} onChange={setPeriod} />
       </div>
 
       <div className="grid-3">
