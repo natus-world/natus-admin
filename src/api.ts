@@ -26,6 +26,7 @@ export type Overview = {
   anonymous: number;
   accounts_7d: number;
   premium_paying: number;
+  premium_trial: number;
   premium_gifted: number;
   active_7d: number;
   ai_spend_month: number;
@@ -33,6 +34,7 @@ export type Overview = {
 };
 
 export type Daily = { day: string; accounts: number; started: number; opened: number };
+export type Hourly = { hour: number; started: number; map_seen: number; accounts: number };
 export type Spend = { day: string; purpose: string; calls: number; failed: number; cost_usd: number };
 export type Crisis = { day: string; severity: string; surface: string; alerts: number; not_their_case: number };
 export type Person = {
@@ -111,6 +113,9 @@ export const api = {
     call<{ step: string; people: number }[]>('admin_funnel', { p_from: from, p_to: to }),
   funnelDetail: (step: string, from: string, to: string) =>
     call<{ detail: string; people: number }[]>('admin_funnel_detail', { p_step: step, p_from: from, p_to: to }),
+  funnelBySource: (from: string, to: string) =>
+    call<{ source: string; step: string; people: number }[]>('admin_funnel_by_source', { p_from: from, p_to: to }),
+  hourly: (day: string) => call<Hourly[]>('admin_hourly', { p_day: day }),
   spend: (days: number) => call<Spend[]>('admin_ai_spend', { p_days: days }),
   crisis: (days: number) => call<Crisis[]>('admin_crisis_counts', { p_days: days }),
   expenses: () => call<Expense[]>('admin_expenses'),

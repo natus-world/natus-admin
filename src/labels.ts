@@ -47,6 +47,51 @@ export const PAYWALL_PLACE: Record<string, string> = {
   '': 'Sin lugar',
 };
 
+/** Where a person came from: the link's tag or, without one, the browser or the page that sent them. */
+export const SOURCE: Record<string, string> = {
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  tiktok: 'TikTok',
+  whatsapp: 'WhatsApp',
+  threads: 'Threads',
+  linkedin: 'LinkedIn',
+  x: 'X (Twitter)',
+  youtube: 'YouTube',
+  google: 'Google',
+  'web-natus': 'Web de Natus',
+  otro: 'Otra página',
+  '': 'Sin dato',
+};
+
+/** The first step's device and browser (from 22 Oct 2026). */
+export const DEVICE: Record<string, string> = {
+  movil: 'Celular',
+  tablet: 'Tablet',
+  computador: 'Computador',
+};
+export const BROWSER: Record<string, string> = {
+  instagram: 'dentro de Instagram',
+  facebook: 'dentro de Facebook',
+  tiktok: 'dentro de TikTok',
+  whatsapp: 'dentro de WhatsApp',
+  threads: 'dentro de Threads',
+  linkedin: 'dentro de LinkedIn',
+  navegador: 'navegador',
+};
+export function deviceLabel(detail: string): string {
+  if (!detail) return 'Sin dato (antes del 22 oct)';
+  const [device = '', browser = ''] = detail.split('-');
+  return `${DEVICE[device] ?? device} · ${BROWSER[browser] ?? browser}`;
+}
+
+/** Whether the hour was given on the birth step (from 22 Oct 2026). */
+export const BIRTH_HOUR: Record<string, string> = {
+  'con-hora': 'Dio su hora',
+  'sin-hora': '«No sé mi hora»: carta sin Ascendente',
+  'solo-numeros': '«No sé mi hora»: solo sus números',
+  '': 'Sin dato (antes del 22 oct)',
+};
+
 export const PURPOSE: Record<string, string> = {
   soul_map: 'Mapa del Alma',
   match: 'Caminos',
