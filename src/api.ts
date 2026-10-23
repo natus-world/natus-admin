@@ -35,6 +35,16 @@ export type Overview = {
 
 export type Daily = { day: string; accounts: number; started: number; opened: number };
 export type Hourly = { hour: number; started: number; map_seen: number; accounts: number };
+export type ByModality = {
+  slug: string;
+  name: string;
+  recommended: number;
+  saved: number;
+  dismissed: number;
+  marked: number;
+  ratings: number;
+  avg_rating: number | null;
+};
 export type AppError = {
   id: string;
   created_at: string;
@@ -180,6 +190,7 @@ export const api = {
   funnelBySource: (from: string, to: string) =>
     call<{ source: string; step: string; people: number }[]>('admin_funnel_by_source', { p_from: from, p_to: to }),
   hourly: (day: string) => call<Hourly[]>('admin_hourly', { p_day: day }),
+  byModality: (from: string, to: string) => call<ByModality[]>('admin_by_modality', { p_from: from, p_to: to }),
   birthCity: async (from: string, to: string) =>
     one(
       await call<{ empty_search: number; did_not_continue: number }[]>('admin_birth_city', {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { api, type Retention } from '../api';
+import { api, type ByModality, type Retention } from '../api';
 import { dayIso, int, shortDay } from '../format';
 import { ErrorNote, Loading, PeriodPicker, Section, Stat, presetPeriod, useAsync } from '../ui';
 
@@ -31,6 +31,11 @@ export function Use() {
   const weekly = useAsync(() => api.weeklyUse(8), []);
   const [period, setPeriod] = useState(() => presetPeriod('30'));
   const first = useAsync(() => api.firstAction(period.from, period.to), [period.from, period.to]);
+  const [therapyPeriod, setTherapyPeriod] = useState(() => presetPeriod('todo'));
+  const therapies = useAsync(
+    () => api.byModality(therapyPeriod.from, therapyPeriod.to),
+    [therapyPeriod.from, therapyPeriod.to],
+  );
 
   const rows = retention.data ?? [];
   // Only weeks whose 7 days have fully passed (the youngest account is 7 days old).
@@ -144,6 +149,20 @@ export function Use() {
         <p className="note">% de las personas con cuenta que abrieron la app esa semana.</p>
       </Section>
       <div className="row-between">
+        <h2 className="h-section">Les hace sentido, por terapia</h2>
+        <PeriodPicker value={therapyPeriod} onChange={setTherapyPeriod} />
+      </div>
+      <Section title="Desde que se recomienda hasta cómo califican sus prácticas">
+        {therapies.error && <ErrorNote>{therapies.error}</ErrorNote>}
+        {therapies.loading ? <Loading /> : <TherapyTable rows={therapies.data ?? []} />}
+        <p className="note">
+          «La guardaron» y «No me hace sentido» son % de las personas a las que se les recomendó. La nota es el promedio de
+          1 a 5 de las prácticas que salen de esa terapia; con pocas calificaciones (n) es solo una pista. Las calificaciones
+          se unen a su terapia desde el 22 de octubre (las anteriores, solo cuando el título era inequívoco).
+        </p>
+      </Section>
+
+      <div className="row-between">
         <h2 className="h-section">Lo primero que hacen</h2>
         <PeriodPicker value={period} onChange={setPeriod} />
       </div>
@@ -184,5 +203,52 @@ function FirstTable({ rows }: { rows: { action: string; people: number }[] }) {
           ))}
       </tbody>
     </table>
+  );
+}
+
+function TherapyTable({ rows }: { rows: ByModality[] }) {
+  const shown = rows.filter((r) => Number(r.recommended) + Number(r.marked) + Number(r.saved) + Number(r.dismissed) > 0);
+  if (shown.length === 0) return <p className="muted">Nada en este rango.</p>;
+  const share = (n: number, of: number) => (of > 0 ? `${Math.round((n / of) * 100)}%` : '—');
+  return (
+    <div className="table-wrap">
+      <table className="table">
+        <thead>
+          <tr>
+            <th>Terapia</th>
+            <th className="num">Recomendada a</th>
+            <th className="num">La guardaron</th>
+            <th className="num">«No me hace sentido»</th>
+            <th className="num">Marcaron una práctica</th>
+            <th className="num">Nota de sus prácticas</th>
+          </tr>
+        </thead>
+        <tbody>
+          {shown.map((r) => {
+            const rec = Number(r.recommended);
+            const dismissed = Number(r.dismissed);
+            const ratings = Number(r.ratings);
+            return (
+              <tr key={r.slug}>
+                <td>{r.name}</td>
+                <td className="num">{int(rec)}</td>
+                <td className="num">{share(Number(r.saved), rec)}</td>
+                <td className="num">{share(dismissed, rec)}</td>
+                <td className="num">{int(Number(r.marked))}</td>
+                <td className="num">
+                  {r.avg_rating === null ? (
+                    <span className="muted">sin notas</span>
+                  ) : (
+                    <>
+                      {String(r.avg_rating).replace('.', ',')} <span className="muted small">n {int(ratings)}</span>
+                    </>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
