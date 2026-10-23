@@ -35,6 +35,28 @@ export type Overview = {
 
 export type Daily = { day: string; accounts: number; started: number; opened: number };
 export type Hourly = { hour: number; started: number; map_seen: number; accounts: number };
+export type AppError = {
+  id: string;
+  created_at: string;
+  kind: string;
+  message: string;
+  path: string | null;
+  release: string | null;
+  user_agent: string | null;
+  stack: string | null;
+  user_id: string | null;
+  name: string | null;
+  email: string | null;
+};
+export type AiFailure = {
+  purpose: string;
+  outcome: string;
+  error_kind: string;
+  calls: number;
+  people: number;
+  recovered: number;
+  last_at: string;
+};
 export type Pending = {
   unread_suggestions: number;
   app_errors_7d: number;
@@ -158,6 +180,9 @@ export const api = {
   funnelBySource: (from: string, to: string) =>
     call<{ source: string; step: string; people: number }[]>('admin_funnel_by_source', { p_from: from, p_to: to }),
   hourly: (day: string) => call<Hourly[]>('admin_hourly', { p_day: day }),
+  appErrors: (from: string, to: string) =>
+    call<AppError[]>('admin_app_errors', { p_from: from, p_to: to, p_limit: 500 }),
+  aiFailures: (from: string, to: string) => call<AiFailure[]>('admin_ai_failures', { p_from: from, p_to: to }),
   pending: async () => one(await call<Pending[]>('admin_pending')),
   personSummary: (id: string) => call<PersonSummary>('admin_person_summary', { p_user: id }),
   retention: (weeks: number) => call<Retention[]>('admin_retention', { p_weeks: weeks }),

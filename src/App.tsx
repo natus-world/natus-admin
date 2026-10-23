@@ -11,6 +11,7 @@ import { Gift } from './sections/Gift';
 import { Alerts } from './sections/Alerts';
 import { Expenses } from './sections/Expenses';
 import { Use } from './sections/Use';
+import { Errors } from './sections/Errors';
 
 /**
  * The sections of the panel. Adding one is one entry here and its file in
@@ -32,6 +33,11 @@ const SECTIONS: { key: string; label: string; render: (route: Route, nav: Nav) =
     key: 'sugerencias',
     label: 'Sugerencias',
     render: (_, nav) => <Suggestions onOpenPerson={(id) => nav.open({ section: 'personas', id })} />,
+  },
+  {
+    key: 'errores',
+    label: 'Errores',
+    render: (_, nav) => <Errors onOpenPerson={(id) => nav.open({ section: 'personas', id })} />,
   },
   {
     key: 'alertas',
