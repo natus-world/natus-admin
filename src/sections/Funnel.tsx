@@ -13,6 +13,7 @@ export function Funnel() {
   const bySource = useAsync(() => api.funnelBySource(from, to), [from, to]);
   const devices = useAsync(() => api.funnelDetail('onboarding_started', from, to), [from, to]);
   const birth = useAsync(() => api.funnelDetail('birth_data_done', from, to), [from, to]);
+  const city = useAsync(() => api.birthCity(from, to), [from, to]);
   const [comparing, setComparing] = useState(true);
   const before = previousPeriod(period);
   const prevFunnel = useAsync(
@@ -75,8 +76,16 @@ export function Funnel() {
             <DetailTable rows={birth.data ?? []} name={(d) => label(BIRTH_HOUR, d)} />
           )}
           <p className="note">
-            Escribieron una ciudad y no apareció en la lista: <b>{int(counts.get('birth_city_not_found') ?? 0)}</b>{' '}
-            {counts.get('birth_city_not_found') === 1 ? 'persona' : 'personas'} (desde el 22 de octubre).
+            No encontraron su ciudad y no siguieron:{' '}
+            <b>{city.data ? int(Number(city.data.did_not_continue)) : '…'}</b>
+            {city.data && Number(city.data.empty_search) > 0 && (
+              <>
+                {' '}
+                (de {int(Number(city.data.empty_search))} que en algún momento vieron la búsqueda vacía, por ejemplo a mitad
+                de escribir)
+              </>
+            )}
+            . Desde el 22 de octubre.
           </p>
         </Section>
       </div>

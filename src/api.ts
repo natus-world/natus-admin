@@ -180,6 +180,13 @@ export const api = {
   funnelBySource: (from: string, to: string) =>
     call<{ source: string; step: string; people: number }[]>('admin_funnel_by_source', { p_from: from, p_to: to }),
   hourly: (day: string) => call<Hourly[]>('admin_hourly', { p_day: day }),
+  birthCity: async (from: string, to: string) =>
+    one(
+      await call<{ empty_search: number; did_not_continue: number }[]>('admin_birth_city', {
+        p_from: from,
+        p_to: to,
+      }),
+    ),
   appErrors: (from: string, to: string) =>
     call<AppError[]>('admin_app_errors', { p_from: from, p_to: to, p_limit: 500 }),
   aiFailures: (from: string, to: string) => call<AiFailure[]>('admin_ai_failures', { p_from: from, p_to: to }),
