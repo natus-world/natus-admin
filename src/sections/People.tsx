@@ -51,7 +51,7 @@ function PeopleList({ onOpen }: { onOpen: (id: string) => void }) {
                   <th>Correo</th>
                   <th>País</th>
                   <th>Plan</th>
-                  <th>Cuenta desde</th>
+                  <th>Se sumó</th>
                   <th>Última vez</th>
                 </tr>
               </thead>
@@ -64,7 +64,7 @@ function PeopleList({ onOpen }: { onOpen: (id: string) => void }) {
                     <td>
                       <span className={`tag ${p.plan}`}>{label(PLAN, p.plan)}</span>
                     </td>
-                    <td>{date(p.created_at)}</td>
+                    <td>{dateTime(p.created_at)}</td>
                     <td>{date(p.last_opened)}</td>
                   </tr>
                 ))}
