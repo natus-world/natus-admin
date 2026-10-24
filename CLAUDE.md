@@ -41,6 +41,10 @@ gratis» and the return from PayPal, the invite link opened, the invite link
 as origin («Invitación de un amigo»), a comparison opened by the other
 friend and the chat about a friendship (shown in the friendship, also after
 it ended). Arrivals before that date are still estimated by dates.
+Each person's file opens «Su carta» on request (logged, `admin_person_chart`):
+what it was cast from, warnings (no hour, a city typed and not picked,
+readings of an older chart), every point with Davraz's reading, the aspects;
+and a comparison shows its twelve areas and how Davraz read each cross.
 
 ## Adding something
 

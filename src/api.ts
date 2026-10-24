@@ -263,6 +263,40 @@ export type Friendship = {
   /** Chat turns about this friendship, kept after it ends. */
   chat: { user_id: string; role: 'user' | 'assistant'; text: string; at: string }[];
 };
+export type ChartPoint = {
+  name: string;
+  sign: string;
+  degree: number;
+  longitude: number;
+  retrograde: boolean;
+  house: number | null;
+  dignity: string | null;
+};
+export type PersonChart = {
+  birth: {
+    date: string | null;
+    time: string | null;
+    city: string | null;
+    country: string | null;
+    place: { name?: string; region?: string; country?: string; latitude?: number; longitude?: number; timezone?: string } | null;
+    daynight: string | null;
+  };
+  chart: {
+    version?: string;
+    has_birth_time?: boolean;
+    points?: ChartPoint[];
+    ascendant?: { sign: string; degree: number } | null;
+    ascendant_ruler?: { planet: string; sign: string; house: number | null } | null;
+    sect?: { kind: string; planets: string[] } | null;
+    aspects?: { a: string; b: string; type: string; separation: number }[];
+  } | null;
+  has_birth_time: boolean | null;
+  provider: string | null;
+  calculated_at: string | null;
+  readings: { point: string; text: string }[] | null;
+  readings_version: string | null;
+  readings_current: boolean;
+};
 export type PersonRow = {
   user_id: string;
   email: string | null;
@@ -362,6 +396,7 @@ export const api = {
   personFriends: (id: string) => call<PersonFriend[]>('admin_person_friends', { p_user: id }),
   screens: (from: string, to: string) =>
     call<{ screen: string; people: number }[]>('admin_screens', { p_from: from, p_to: to }),
+  personChart: (id: string) => call<PersonChart | null>('admin_person_chart', { p_user: id }),
   friendship: (id: string) => call<Friendship | null>('admin_friendship', { p_id: id }),
   teamSuggestions: () => call<TeamSuggestion[]>('admin_suggestions_list'),
   addTeamSuggestion: (section: string, body: string) =>

@@ -1,8 +1,25 @@
-import { useEffect, useState } from 'react';
-import { api, type ContentKind, type PersonSummary, type PersonRow, type Friendship } from '../api';
+import { Fragment, useEffect, useState } from 'react';
+import { api, type ContentKind, type PersonSummary, type PersonRow, type Friendship, type PersonChart } from '../api';
 import { Def } from '../charts';
 import { date, dateTime, int, usd } from '../format';
-import { BIRTH_HOUR, KINDS, ONBOARDING, MONEY, SOURCE, USE, PAYWALL_PLACE, PLAN, deviceLabel, label } from '../labels';
+import {
+  AREA,
+  ASPECT,
+  BIRTH_HOUR,
+  BODY,
+  CROSS_LABEL,
+  DIGNITY,
+  KINDS,
+  ONBOARDING,
+  MONEY,
+  SIGN,
+  SOURCE,
+  USE,
+  PAYWALL_PLACE,
+  PLAN,
+  deviceLabel,
+  label,
+} from '../labels';
 import { ErrorNote, Loading, Section, Value, messageOf, useAsync } from '../ui';
 
 const STEP_LABEL: Record<string, string> = Object.fromEntries(
@@ -202,6 +219,8 @@ function PersonView({ id, onBack, onOpenPerson }: { id: string; onBack: () => vo
             </div>
           </div>
 
+          <ChartSection id={id} />
+
           <Friends id={id} name={str(p['name']) || 'Esta persona'} onOpenPerson={onOpenPerson} />
 
           <Adapt id={id} />
@@ -239,6 +258,148 @@ function PersonView({ id, onBack, onOpenPerson }: { id: string; onBack: () => vo
           </Section>
         </>
       )}
+    </div>
+  );
+}
+
+/** 13.6 → «13°36'». */
+function deg(d: number): string {
+  const whole = Math.floor(d);
+  const min = Math.round((d - whole) * 60);
+  return min === 60 ? `${whole + 1}°00'` : `${whole}°${String(min).padStart(2, '0')}'`;
+}
+
+/**
+ * Su carta completa (owner, 24 Oct 2026): what it was cast from, the chart as
+ * stored, and Davraz's reading of each point, to set beside the chat. Loaded
+ * on request because each look is logged.
+ */
+function ChartSection({ id }: { id: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Section
+      title="Su carta"
+      aside={
+        <button type="button" className="btn ghost" onClick={() => setOpen(!open)}>
+          {open ? 'Cerrar' : 'Ver su carta completa'}
+        </button>
+      }
+    >
+      {open ? <ChartView id={id} /> : <p className="muted small">Abrirla queda registrado, como el chat.</p>}
+    </Section>
+  );
+}
+
+function ChartView({ id }: { id: string }) {
+  const res = useAsync(() => api.personChart(id), [id]);
+  const c: PersonChart | null | undefined = res.data;
+  if (res.error) return <ErrorNote>{res.error}</ErrorNote>;
+  if (!c) return res.loading ? <Loading /> : <p className="muted">No tiene datos de nacimiento.</p>;
+  const b = c.birth;
+  const place = b.place;
+  const points = c.chart?.points ?? [];
+  const reading = new Map((c.readings ?? []).map((r) => [r.point, r.text]));
+  const hasHour = c.has_birth_time ?? c.chart?.has_birth_time ?? false;
+  const warnings: string[] = [];
+  if (!c.chart) warnings.push('No tiene carta guardada: solo números.');
+  if (b.city && !place) warnings.push('Escribió la ciudad pero no la eligió de la lista: el lugar se buscó por el nombre.');
+  if (!hasHour) warnings.push(`Sin hora de nacimiento: carta a mediodía, sin casas ni ascendente${b.daynight ? `; dijo que nació ${b.daynight === 'dia' ? 'de día' : b.daynight === 'noche' ? 'de noche' : 'sin saber si de día o de noche'}` : ''}.`);
+  if (c.readings && !c.readings_current) warnings.push('La lectura de Davraz es de una versión anterior de esta carta.');
+  return (
+    <div className="stack-s">
+      <dl className="facts">
+        <dt>Se calculó con</dt>
+        <dd>
+          {date(b.date)} {hasHour ? `a las ${str(b.time).slice(0, 5)}` : '(sin hora)'} · {place ? `${place.name}, ${place.region} (${place.country})` : `${str(b.city) || '—'} ${str(b.country)}`}
+        </dd>
+        {place && (
+          <>
+            <dt>Coordenadas y zona</dt>
+            <dd>
+              {place.latitude?.toFixed(4)}, {place.longitude?.toFixed(4)} · {place.timezone}
+            </dd>
+          </>
+        )}
+        <dt>Calculada el</dt>
+        <dd>
+          {dateTime(c.calculated_at)} · casas enteras · {str(c.provider)} {c.chart?.version ? `· ${c.chart.version}` : ''}
+        </dd>
+        {c.chart?.ascendant && (
+          <>
+            <dt>Ascendente</dt>
+            <dd>
+              {label(SIGN, c.chart.ascendant.sign)} {deg(c.chart.ascendant.degree)}
+              {c.chart.ascendant_ruler &&
+                ` · su regente, ${label(BODY, c.chart.ascendant_ruler.planet)}, en ${label(SIGN, c.chart.ascendant_ruler.sign)}${c.chart.ascendant_ruler.house ? `, casa ${c.chart.ascendant_ruler.house}` : ''}`}
+            </dd>
+          </>
+        )}
+        {c.chart?.sect && (
+          <>
+            <dt>Nació</dt>
+            <dd>{c.chart.sect.kind === 'diurna' ? 'de día' : 'de noche'}</dd>
+          </>
+        )}
+      </dl>
+      {warnings.length > 0 && (
+        <ul className="warn-list">
+          {warnings.map((w) => (
+            <li key={w}>{w}</li>
+          ))}
+        </ul>
+      )}
+      {points.length > 0 && (
+        <div className="table-wrap">
+          <table className="table chart-table">
+            <thead>
+              <tr>
+                <th>Punto</th>
+                <th>Signo</th>
+                <th className="num">Grado</th>
+                <th className="num">Casa</th>
+                <th className="reading-cell">La lectura de Davraz</th>
+              </tr>
+            </thead>
+            <tbody>
+              {points.map((pt) => (
+                <Fragment key={pt.name}>
+                <tr>
+                  <td>
+                    {label(BODY, pt.name)}
+                    {pt.retrograde && <span className="muted"> · R</span>}
+                    {pt.dignity && <span className="muted"> · {label(DIGNITY, pt.dignity)}</span>}
+                  </td>
+                  <td>{label(SIGN, pt.sign)}</td>
+                  <td className="num">{deg(pt.degree)}</td>
+                  <td className="num">{pt.house ?? '—'}</td>
+                  <td className="small reading-cell">{reading.get(pt.name) ?? <span className="muted">—</span>}</td>
+                </tr>
+                {reading.has(pt.name) && (
+                  <tr className="reading-row">
+                    <td colSpan={4} className="small">
+                      {reading.get(pt.name)}
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {(c.chart?.aspects?.length ?? 0) > 0 && (
+        <details>
+          <summary className="link small">Aspectos por signo ({int(c.chart?.aspects?.length ?? 0)})</summary>
+          <ul className="small">
+            {c.chart?.aspects?.map((a, i) => (
+              <li key={i}>
+                {label(BODY, a.a)} {label(ASPECT, a.type)} {label(BODY, a.b)} <span className="muted">· {a.separation}° de separación</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+      <p className="muted small">R: retrógrado. Para comprobarla, compárala con otro cálculo de la misma fecha, hora y lugar en casas enteras.</p>
     </div>
   );
 }
@@ -582,14 +743,20 @@ function FriendshipView({ id, onClose, onOpenPerson }: { id: string; onClose: ()
             <ol className="timeline">
               {f.comparisons.map((c) => (
                 <li key={c.id}>
-                  <span className="muted">{dateTime(c.created_at)}</span> · la pidió {nameOf(c.asked_by)} · {int(c.aspects)} aspectos ·{' '}
+                  <span className="muted">{dateTime(c.created_at)}</span> · la pidió {nameOf(c.asked_by)} · {int(c.aspects)} aspectos{c.result && !c.result['areas'] ? ' · sin áreas (versión anterior)' : ''} ·{' '}
                   <span className="muted">{readBy(c)}</span>{' '}
                   {f.readable && c.result ? (
                     <button type="button" className="link small" onClick={() => setRead(read === c.id ? null : c.id)}>
                       {read === c.id ? 'Cerrar' : 'Leer la comparación'}
                     </button>
                   ) : null}
-                  {read === c.id && c.result && <ComparisonText result={c.result} />}
+                  {read === c.id && c.result && (
+                    <ComparisonText
+                      result={c.result}
+                      asker={nameOf(c.asked_by)}
+                      other={nameOf(c.asked_by === f.requester.id ? f.addressee.id : f.requester.id)}
+                    />
+                  )}
                 </li>
               ))}
             </ol>
@@ -630,9 +797,11 @@ function FriendshipView({ id, onClose, onOpenPerson }: { id: string; onClose: ()
   );
 }
 
-function ComparisonText({ result }: { result: Record<string, unknown> }) {
+function ComparisonText({ result, asker, other }: { result: Record<string, unknown>; asker: string; other: string }) {
   const list = (k: string) => (Array.isArray(result[k]) ? (result[k] as unknown[]).map(str) : []);
   const aspects = (get(result, 'astro_dialogue', 'aspects') as Record_[] | undefined) ?? [];
+  const areas = (result['areas'] as Record_[] | undefined) ?? [];
+  const crosses = (result['cross_labels'] as Record_[] | undefined) ?? [];
   const parts: [string, string[]][] = [
     ['Lo bueno', list('lo_bueno')],
     ['Tener en cuenta', list('tener_en_cuenta')],
@@ -653,6 +822,32 @@ function ComparisonText({ result }: { result: Record<string, unknown> }) {
             </ul>
           </div>
         ) : null,
+      )}
+      {areas.length > 0 && (
+        <div>
+          <p className="h-sub">Por áreas</p>
+          <ul>
+            {areas.map((a, i) => (
+              <li key={i}>
+                <b>{label(AREA, str(a['key']))}</b>: {str(a['reading'])}
+                {a['question'] ? <span className="muted"> · {str(a['question'])}</span> : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {crosses.length > 0 && (
+        <div>
+          <p className="h-sub">Cómo leyó Davraz cada cruce</p>
+          <ul>
+            {crosses.map((x, i) => (
+              <li key={i}>
+                {label(BODY, str(x['a_body']))} de {asker} con {label(BODY, str(x['b_body']))} de {other}:{' '}
+                {label(CROSS_LABEL, str(x['label']))}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       {aspects.length > 0 && (
         <div>

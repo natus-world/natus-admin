@@ -135,3 +135,79 @@ export const KINDS: { key: import('./api').ContentKind; label: string }[] = [
 ];
 
 export const label = (map: Record<string, string>, key: string) => map[key] ?? key;
+
+/** The names the ephemeris returns, as the app shows them (natus-mvp `copy.astro.bodies`). */
+export const BODY: Record<string, string> = {
+  Sun: 'Sol',
+  Moon: 'Luna',
+  Mercury: 'Mercurio',
+  Venus: 'Venus',
+  Mars: 'Marte',
+  Jupiter: 'Júpiter',
+  Saturn: 'Saturno',
+  Uranus: 'Urano',
+  Neptune: 'Neptuno',
+  Pluto: 'Plutón',
+  Chiron: 'Quirón',
+  Mean_Lilith: 'Lilith',
+  True_North_Lunar_Node: 'Nodo norte',
+  True_South_Lunar_Node: 'Nodo sur',
+  Mean_North_Lunar_Node: 'Nodo norte',
+  Mean_South_Lunar_Node: 'Nodo sur',
+  Ascendant: 'Ascendente',
+  Descendant: 'Descendente',
+  Medium_Coeli: 'Medio cielo',
+  Imum_Coeli: 'Fondo del cielo',
+};
+
+export const SIGN: Record<string, string> = {
+  Aries: 'Aries',
+  Taurus: 'Tauro',
+  Gemini: 'Géminis',
+  Cancer: 'Cáncer',
+  Leo: 'Leo',
+  Virgo: 'Virgo',
+  Libra: 'Libra',
+  Scorpio: 'Escorpio',
+  Sagittarius: 'Sagitario',
+  Capricorn: 'Capricornio',
+  Aquarius: 'Acuario',
+  Pisces: 'Piscis',
+};
+
+export const ASPECT: Record<string, string> = {
+  conjunction: 'conjunción',
+  sextile: 'sextil',
+  square: 'cuadratura',
+  trine: 'trígono',
+  opposition: 'oposición',
+};
+
+export const DIGNITY: Record<string, string> = {
+  domicilio: 'en domicilio',
+  exaltacion: 'en exaltación',
+  exilio: 'en exilio',
+  caida: 'en caída',
+};
+
+/** «Las dos cartas»: the twelve areas, in the owner's order (natus-mvp `copy.comparison.areas`). */
+export const AREA: Record<string, string> = {
+  quienes_son: 'Quiénes son',
+  lo_que_se_dan: 'Lo que se dan',
+  lo_que_sienten: 'Lo que sienten',
+  como_se_hablan: 'Cómo se hablan',
+  lo_que_disfrutan: 'Lo que disfrutan juntos',
+  atraccion: 'Atracción y química',
+  sexualidad: 'Sexualidad y deseo',
+  desacuerdo: 'Cuando no están de acuerdo',
+  conviven: 'Cómo conviven',
+  trabajan: 'Cómo trabajan juntos',
+  sostiene: 'Lo que los sostiene',
+  como_se_ven: 'Cómo se ven juntos',
+};
+
+export const CROSS_LABEL: Record<string, string> = {
+  fluye: 'Fluye naturalmente',
+  cultiva: 'Fluye si lo cultivan',
+  trabajo: 'Pide más trabajo',
+};

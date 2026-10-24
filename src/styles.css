@@ -2112,3 +2112,34 @@ html:has(.app.v2) body {
   height: auto;
   padding: 7px 14px;
 }
+
+/* Su carta: what to check before trusting a chart. */
+.warn-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--alert);
+}
+.warn-list li + li {
+  margin-top: 0.25rem;
+}
+
+/* On the phone Davraz's reading goes under its point, not in a fifth column. */
+.chart-table .reading-row {
+  display: none;
+}
+@media (max-width: 760px) {
+  .chart-table .reading-cell {
+    display: none;
+  }
+  .chart-table .reading-row {
+    display: table-row;
+  }
+  .chart-table tr:has(+ .reading-row) td {
+    border-bottom: 0;
+    padding-bottom: 0.15rem;
+  }
+  .chart-table .reading-row td {
+    padding-top: 0;
+    color: var(--ink-2);
+  }
+}
