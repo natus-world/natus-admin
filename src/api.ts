@@ -177,6 +177,94 @@ export type ContentKind =
   | 'chart'
   | 'paths';
 
+export type Growth = { week_start: string; kept: number; new_people: number; returned: number; lost: number };
+export type CohortPoint = { cohort: string; week_n: number; accounts: number; active: number };
+export type FreeUsage = {
+  feature: 'chat' | 'meditation' | 'comparison';
+  free_people: number;
+  used_all: number;
+  started_trial: number;
+  kept_using: number;
+  did_not_return: number;
+};
+export type PremiumRow = {
+  user_id: string;
+  name: string | null;
+  email: string | null;
+  kind: 'paying' | 'trial' | 'gifted';
+  since: string | null;
+  until: string | null;
+  granted_by_name: string | null;
+  ai_month: number;
+  fixed_share: number;
+  paid_month: number;
+};
+export type Friends = {
+  accounts: number;
+  shared: number;
+  accepted: number;
+  new_by_invite: number;
+  befriended: number;
+  compared: number;
+  comparisons: number;
+  active_friendships: number;
+  ended: number;
+};
+export type Inviter = {
+  user_id: string;
+  name: string | null;
+  shared: number;
+  accepted: number;
+  new_people: number;
+  comparisons: number;
+  last_at: string;
+};
+export type PersonFriend = {
+  friendship_id: string;
+  friend_id: string;
+  friend_name: string | null;
+  invited_by_them: boolean;
+  status: 'accepted' | 'removed';
+  since: string;
+  ended_at: string | null;
+  ended_by_them: boolean;
+  comparisons: number;
+  friend_arrived_by_invite: boolean;
+};
+export type Friendship = {
+  id: string;
+  status: 'accepted' | 'removed' | 'pending' | 'declined';
+  since: string;
+  ended_at: string | null;
+  ended_by: string | null;
+  requester: { id: string; name: string | null };
+  addressee: { id: string; name: string | null; arrived_by_invite: boolean };
+  readable: boolean;
+  comparisons: {
+    id: string;
+    created_at: string;
+    asked_by: string;
+    aspects: number;
+    result: Record<string, unknown> | null;
+  }[];
+};
+export type PersonRow = {
+  user_id: string;
+  email: string | null;
+  name: string | null;
+  country: string | null;
+  joined_at: string | null;
+  plan: 'free' | 'premium' | 'gift';
+  last_opened: string | null;
+  source: string | null;
+  device: string | null;
+  activated: boolean;
+  invited: number;
+  chat_left: number | null;
+  meditation_left: number | null;
+  comparison_left: number | null;
+};
+
 const one = <T,>(rows: T[] | null): T | null => (rows && rows[0]) ?? null;
 
 export const api = {
@@ -233,4 +321,20 @@ export const api = {
   inbox: () => call<InboxRow[]>('admin_feedback_inbox', { p_limit: 200 }),
   thread: (id: string) => call<ThreadRow[]>('admin_feedback_thread', { p_user: id }),
   reply: (id: string, body: string) => call<string>('admin_feedback_reply', { p_user: id, p_body: body }),
+  growth: (weeks: number) => call<Growth[]>('admin_growth', { p_weeks: weeks }),
+  cohortCurve: (weeks: number) => call<CohortPoint[]>('admin_cohort_curve', { p_weeks: weeks }),
+  openDays: (from: string, to: string) =>
+    call<{ bucket: string; people: number }[]>('admin_open_days', { p_from: from, p_to: to }),
+  heatmap: (from: string, to: string) =>
+    call<{ dow: number; hour: number; actions: number }[]>('admin_activity_heatmap', { p_from: from, p_to: to }),
+  ratings: (from: string, to: string) => call<{ rating: number; n: number }[]>('admin_ratings', { p_from: from, p_to: to }),
+  lastSteps: (week: string) => call<{ step: string; people: number }[]>('admin_last_steps', { p_week: week }),
+  freeUsage: () => call<FreeUsage[]>('admin_free_usage'),
+  premiumList: () => call<PremiumRow[]>('admin_premium_list'),
+  friends: async (from: string, to: string) => one(await call<Friends[]>('admin_friends', { p_from: from, p_to: to })),
+  topInviters: (from: string, to: string) =>
+    call<Inviter[]>('admin_top_inviters', { p_from: from, p_to: to, p_limit: 20 }),
+  personFriends: (id: string) => call<PersonFriend[]>('admin_person_friends', { p_user: id }),
+  friendship: (id: string) => call<Friendship | null>('admin_friendship', { p_id: id }),
+  peopleList: (query: string) => call<PersonRow[]>('admin_people_list', { p_query: query, p_limit: 200 }),
 };

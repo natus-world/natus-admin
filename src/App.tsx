@@ -2,59 +2,78 @@ import { useEffect, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import { api } from './api';
-import { ErrorNote, Loading, messageOf } from './ui';
-import { Overview } from './sections/Overview';
-import { Funnel } from './sections/Funnel';
+import { ErrorNote, Loading, messageOf, PeriodPicker, presetPeriod, previousPeriod, useAsync, type Period } from './ui';
 import { People } from './sections/People';
+import { Pulso } from './sections/Pulso';
+import { Llegan } from './sections/Llegan';
+import { Sirve } from './sections/Sirve';
+import { Vuelven } from './sections/Vuelven';
+import { Pagan } from './sections/Pagan';
+import { TipLayer } from './charts';
+import { date, int } from './format';
+import type { ViewProps } from './sections/views';
 import { Suggestions } from './sections/Suggestions';
 import { Gift } from './sections/Gift';
 import { Alerts } from './sections/Alerts';
 import { Expenses } from './sections/Expenses';
-import { Use } from './sections/Use';
 import { Errors } from './sections/Errors';
 
 /**
- * The sections of the panel. Adding one is one entry here and its file in
- * `sections/`, reading one `admin_*` function through `api.ts`.
+ * The sections of the panel, ordered by four questions (owner, 23 Oct 2026,
+ * from the approved mockup «Panel Natus como la app»): the Pulso first, then
+ * ¿Llegan? ¿Les sirve? ¿Vuelven? ¿Pagan?, each person, what needs care, and
+ * the settings. Adding one is one entry here and its file in `sections/`.
  */
 type Route = { section: string; id: string | null };
 type Nav = { open: (r: Route) => void };
+type Ctx = { route: Route; nav: Nav; view: ViewProps };
 
-const SECTIONS: { key: string; label: string; render: (route: Route, nav: Nav) => ReactNode }[] = [
-  { key: 'resumen', label: 'Resumen', render: () => <Overview /> },
-  { key: 'embudo', label: 'Embudos', render: () => <Funnel /> },
-  { key: 'uso', label: 'Uso y retención', render: () => <Use /> },
+const SECTIONS: { key: string; label: string; group: string; question?: boolean; render: (c: Ctx) => ReactNode }[] = [
+  { key: 'pulso', label: 'Pulso', group: '', question: true, render: (c) => <Pulso {...c.view} /> },
+  { key: 'llegan', label: '¿Llegan?', group: 'Las cuatro preguntas', question: true, render: (c) => <Llegan {...c.view} /> },
+  { key: 'sirve', label: '¿Les sirve?', group: 'Las cuatro preguntas', question: true, render: (c) => <Sirve {...c.view} /> },
+  { key: 'vuelven', label: '¿Vuelven?', group: 'Las cuatro preguntas', question: true, render: (c) => <Vuelven {...c.view} /> },
+  { key: 'pagan', label: '¿Pagan?', group: 'Las cuatro preguntas', question: true, render: (c) => <Pagan {...c.view} /> },
   {
     key: 'personas',
     label: 'Personas',
-    render: (route, nav) => <People open={route.id} onOpen={(id) => nav.open({ section: 'personas', id })} />,
-  },
-  {
-    key: 'sugerencias',
-    label: 'Sugerencias',
-    render: (_, nav) => <Suggestions onOpenPerson={(id) => nav.open({ section: 'personas', id })} />,
-  },
-  {
-    key: 'errores',
-    label: 'Errores',
-    render: (_, nav) => <Errors onOpenPerson={(id) => nav.open({ section: 'personas', id })} />,
+    group: 'Cada persona',
+    render: ({ route, nav }) => <People open={route.id} onOpen={(id) => nav.open({ section: 'personas', id })} />,
   },
   {
     key: 'alertas',
     label: 'Alertas de crisis',
-    render: (_, nav) => <Alerts onOpenPerson={(id) => nav.open({ section: 'personas', id })} />,
+    group: 'Cuidado',
+    render: ({ nav }) => <Alerts onOpenPerson={(id) => nav.open({ section: 'personas', id })} />,
   },
-  { key: 'gastos', label: 'Gastos', render: () => <Expenses /> },
+  {
+    key: 'errores',
+    label: 'Errores',
+    group: 'Cuidado',
+    render: ({ nav }) => <Errors onOpenPerson={(id) => nav.open({ section: 'personas', id })} />,
+  },
+  {
+    key: 'sugerencias',
+    label: 'Sugerencias',
+    group: 'Cuidado',
+    render: ({ nav }) => <Suggestions onOpenPerson={(id) => nav.open({ section: 'personas', id })} />,
+  },
+  { key: 'gastos', label: 'Gastos fijos', group: 'Ajustes', render: () => <Expenses /> },
   {
     key: 'premium',
     label: 'Regalar Premium',
-    render: (_, nav) => <Gift onOpenPerson={(id) => nav.open({ section: 'personas', id })} />,
+    group: 'Ajustes',
+    render: ({ nav }) => <Gift onOpenPerson={(id) => nav.open({ section: 'personas', id })} />,
   },
 ];
 
+/** The sections before 23 Oct 2026, so an old bookmark still lands somewhere sensible. */
+const OLD: Record<string, string> = { resumen: 'pulso', embudo: 'llegan', uso: 'sirve' };
+
 function readHash(): Route {
-  const [section = 'resumen', id = null] = window.location.hash.replace(/^#\/?/, '').split('/');
-  return { section: SECTIONS.some((s) => s.key === section) ? section : 'resumen', id: id || null };
+  const [raw = 'pulso', id = null] = window.location.hash.replace(/^#\/?/, '').split('/');
+  const section = OLD[raw] ?? raw;
+  return { section: SECTIONS.some((s) => s.key === section) ? section : 'pulso', id: id || null };
 }
 
 function useRoute(): [Route, (r: Route) => void] {
@@ -108,33 +127,121 @@ export function App() {
     );
   }
 
+  return <Panel email={session.user.email ?? ''} route={route} go={go} />;
+}
+
+function Panel({ email, route, go }: { email: string; route: Route; go: (r: Route) => void }) {
+  const [period, setPeriod] = useState<Period>(() => presetPeriod('7'));
+  const [compare, setCompare] = useState(true);
+  const pending = useAsync(() => api.pending(), [route.section]);
   const current = SECTIONS.find((s) => s.key === route.section) ?? SECTIONS[0]!;
+  const prev = previousPeriod(period);
+  const p = pending.data;
+  const counts = {
+    alertas: Number(p?.crisis_7d ?? 0),
+    errores: Number(p?.app_errors_7d ?? 0),
+    sugerencias: Number(p?.unread_suggestions ?? 0),
+  };
+  const view: ViewProps = {
+    period,
+    compare,
+    onOpenPerson: (id) => go({ section: 'personas', id }),
+    go: (section) => go({ section, id: null }),
+  };
+  const groups = [...new Set(SECTIONS.map((s) => s.group))];
   return (
-    <div className="app">
+    <div className="app v2">
+      <div className="foto" aria-hidden="true" />
+      <div className="velo" aria-hidden="true" />
+      <TipLayer />
       <aside className="side">
         <p className="brand">
           Natus <em>admin</em>
+          <small>Panel interno</small>
         </p>
         <nav>
-          {SECTIONS.map((s) => (
-            <a key={s.key} href={`#${s.key}`} className={s.key === current.key ? 'on' : ''}>
-              {s.label}
-            </a>
+          {groups.map((g) => (
+            <div key={g || 'top'} className="nav-group">
+              {g && <p className="grp">{g}</p>}
+              {SECTIONS.filter((s) => s.group === g).map((s) => (
+                <a key={s.key} href={`#${s.key}`} className={s.key === current.key ? 'on' : ''} aria-current={s.key === current.key ? 'page' : undefined}>
+                  {s.label}
+                  {(counts as Record<string, number>)[s.key] ? (
+                    <span className={`cnt${s.key === 'alertas' ? '' : ' w'}`}>{int((counts as Record<string, number>)[s.key])}</span>
+                  ) : null}
+                </a>
+              ))}
+            </div>
           ))}
         </nav>
         <div className="side-foot">
-          <p className="muted small">{session.user.email}</p>
+          <p className="muted small">{email}</p>
           <button type="button" className="link small" onClick={() => void supabase.auth.signOut()}>
             Salir
           </button>
         </div>
       </aside>
       <main className="main">
-        <h1 className="page-title">{current.label}</h1>
-        {current.render(route, { open: go })}
+        <div className="bar">
+          <div className="bar-row">
+            {current.question && (
+              <>
+                <PeriodPicker value={period} onChange={setPeriod} />
+                <select className="sel" value={compare ? 'si' : 'no'} onChange={(e) => setCompare(e.target.value === 'si')} aria-label="Comparar">
+                  <option value="si">Comparar con el periodo anterior</option>
+                  <option value="no">Sin comparar</option>
+                </select>
+              </>
+            )}
+            <div className="urgent">
+              {counts.alertas > 0 && (
+                <a className="chip crit" href="#alertas">
+                  ▲ {int(counts.alertas)} {counts.alertas === 1 ? 'alerta de crisis' : 'alertas de crisis'} en 7 días
+                </a>
+              )}
+              {counts.errores > 0 && (
+                <a className="chip warn" href="#errores">
+                  ● {int(counts.errores)} {counts.errores === 1 ? 'error' : 'errores'} en 7 días
+                </a>
+              )}
+              {counts.sugerencias > 0 && (
+                <a className="chip warn" href="#sugerencias">
+                  ✉ {int(counts.sugerencias)} {counts.sugerencias === 1 ? 'sugerencia sin responder' : 'sugerencias sin responder'}
+                </a>
+              )}
+            </div>
+          </div>
+          {current.question && (
+            <p className="scope">
+              Estás viendo <b>{range(period.from, period.to)}</b>
+              {compare && (
+                <>
+                  {' '}
+                  contra <b>{range(prev.from, prev.to)}</b>
+                </>
+              )}{' '}
+              · hora de Chile · sin el equipo ni el robot de pruebas
+            </p>
+          )}
+        </div>
+        {current.question ? (
+          current.render({ route, nav: { open: go }, view })
+        ) : (
+          <section className="page">
+            <div className="head">
+              <span className="kick">{current.group}</span>
+              <h1>{current.label}</h1>
+            </div>
+            {current.render({ route, nav: { open: go }, view })}
+          </section>
+        )}
       </main>
     </div>
   );
+}
+
+function range(from: string, to: string) {
+  return from === to ? date(from) : `${date(from)} – ${date(to)}`;
 }
 
 function Shell({ children }: { children: ReactNode }) {

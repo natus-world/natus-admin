@@ -19,6 +19,26 @@ project as `natus-mvp`. Only the team enters: Google sign-in, then the
 - The Supabase URL and publishable key in `src/config.ts` are public
   identifiers, as in the user app. Nothing secret lives here.
 
+## The order of the panel (owner, 23 Oct 2026)
+
+From the approved mockup «Panel Natus como la app» (the cerebro keeps it in
+`diseno/panel-admin/`): the **Pulso** first, then four questions — **¿Llegan?
+¿Les sirve? ¿Vuelven? ¿Pagan?** — then **Personas** (each file, with friends
+and each friendship), **Cuidado** (crisis alerts, errors, suggestions) and
+**Ajustes** (fixed costs, gifting Premium). The bar on top holds the period
+and the comparison for the four questions, and what is urgent everywhere.
+Each page opens with its conclusion as the title. The look is the app's: the
+Carta's starry sky (`public/img`, from natus-mvp's photo bank), an even veil,
+glass, Cormorant for titles and numbers; one cream for data, a blue and a
+green only for several series (`src/charts.tsx`, hand-drawn SVG, every mark
+with a hover). The main number is people active per week (owner). A
+friendship that ended shows that it existed, never its comparisons' text
+(owner). Functions: `20261024010000_admin_panel_v2.sql` in natus-mvp.
+Not yet measured, marked «dato nuevo» on the pages: screens viewed, the tap
+on «Empezar mes gratis», the return from PayPal, the invite link opened, a
+comparison opened by the other friend, the chat about a comparison, and a
+certain arrival by invitation (today estimated by dates).
+
 ## Adding something
 
 A new metric or action: a new `admin_*` function in a natus-mvp migration

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { api, type ContentKind, type PersonSummary } from '../api';
+import { api, type ContentKind, type PersonSummary, type PersonRow, type Friendship } from '../api';
+import { Def } from '../charts';
 import { date, dateTime, int, usd } from '../format';
 import { BIRTH_HOUR, KINDS, ONBOARDING, MONEY, SOURCE, USE, PAYWALL_PLACE, PLAN, deviceLabel, label } from '../labels';
 import { ErrorNote, Loading, Section, Value, messageOf, useAsync } from '../ui';
@@ -15,7 +16,7 @@ const STEP_LABEL: Record<string, string> = Object.fromEntries(
 );
 
 export function People({ open, onOpen }: { open: string | null; onOpen: (id: string | null) => void }) {
-  if (open) return <PersonView id={open} onBack={() => onOpen(null)} />;
+  if (open) return <PersonView key={open} id={open} onBack={() => onOpen(null)} onOpenPerson={(x) => onOpen(x)} />;
   return <PeopleList onOpen={onOpen} />;
 }
 
@@ -26,7 +27,7 @@ function PeopleList({ onOpen }: { onOpen: (id: string) => void }) {
     const t = setTimeout(() => setSearch(query), 300);
     return () => clearTimeout(t);
   }, [query]);
-  const people = useAsync(() => api.people(search), [search]);
+  const people = useAsync(() => api.peopleList(search), [search]);
 
   return (
     <div className="stack">
@@ -47,25 +48,39 @@ function PeopleList({ onOpen }: { onOpen: (id: string) => void }) {
             <table className="table clickable">
               <thead>
                 <tr>
-                  <th>Nombre</th>
-                  <th>Correo</th>
-                  <th>País</th>
-                  <th>Plan</th>
+                  <th>Persona</th>
                   <th>Se sumó</th>
+                  <th>Origen</th>
+                  <th>Desde</th>
+                  <th>Plan</th>
+                  <th>
+                    Lo gratis <Def text="Si ya usó todo lo gratis de algo: las preguntas a Davraz, la meditación o las comparaciones del mes." />
+                  </th>
+                  <th className="r">Invitó</th>
                   <th>Última vez</th>
+                  <th>Activada</th>
                 </tr>
               </thead>
               <tbody>
                 {(people.data ?? []).map((p) => (
                   <tr key={p.user_id} onClick={() => onOpen(p.user_id)} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onOpen(p.user_id)}>
-                    <td>{p.name ?? <span className="muted">Sin nombre</span>}</td>
-                    <td>{p.email ?? '—'}</td>
-                    <td>{p.country ?? '—'}</td>
+                    <td>
+                      <b className="w5">{p.name ?? 'Sin nombre'}</b>
+                      <br />
+                      <span className="muted small">{p.email ?? '—'}</span>
+                    </td>
+                    <td>{dateTime(p.joined_at)}</td>
+                    <td>{label(SOURCE, p.source ?? '')}</td>
+                    <td>{p.device ? deviceLabel(p.device) : <span className="muted">—</span>}</td>
                     <td>
                       <span className={`tag ${p.plan}`}>{label(PLAN, p.plan)}</span>
                     </td>
-                    <td>{dateTime(p.created_at)}</td>
+                    <td>
+                      <FreeCell p={p} />
+                    </td>
+                    <td className="r">{p.invited ? int(p.invited) : <span className="muted">—</span>}</td>
                     <td>{date(p.last_opened)}</td>
+                    <td>{p.activated ? <span className="ok">✓ sí</span> : <span className="muted">no</span>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -77,12 +92,32 @@ function PeopleList({ onOpen }: { onOpen: (id: string) => void }) {
   );
 }
 
+/** Which free things a person has used up; «sin tope» for Premium. */
+function FreeCell({ p }: { p: PersonRow }) {
+  if (p.plan !== 'free') return <span className="muted">sin tope</span>;
+  const used = [
+    p.chat_left === 0 ? 'Davraz' : null,
+    p.meditation_left === 0 ? 'meditación' : null,
+    p.comparison_left === 0 ? 'comparar' : null,
+  ].filter(Boolean);
+  const tip = `Le quedan: ${p.chat_left ?? '—'} preguntas · ${p.meditation_left ?? '—'} meditaciones · ${p.comparison_left ?? '—'} comparaciones este mes`;
+  return used.length ? (
+    <span className="chip warn" data-tip={tip}>
+      ● {used.join(' y ')} usado
+    </span>
+  ) : (
+    <span className="muted" data-tip={tip}>
+      queda
+    </span>
+  );
+}
+
 type Record_ = Record<string, unknown>;
 const get = (r: Record_ | undefined, ...path: string[]): unknown =>
   path.reduce<unknown>((v, k) => (v && typeof v === 'object' ? (v as Record_)[k] : undefined), r);
 const str = (v: unknown) => (typeof v === 'string' ? v : v === null || v === undefined ? '' : String(v));
 
-function PersonView({ id, onBack }: { id: string; onBack: () => void }) {
+function PersonView({ id, onBack, onOpenPerson }: { id: string; onBack: () => void; onOpenPerson: (id: string) => void }) {
   const person = useAsync(() => api.person(id), [id]);
   const [kind, setKind] = useState<ContentKind>('chat');
   const p = person.data;
@@ -166,6 +201,8 @@ function PersonView({ id, onBack }: { id: string; onBack: () => void }) {
               </Section>
             </div>
           </div>
+
+          <Friends id={id} name={str(p['name']) || 'Esta persona'} onOpenPerson={onOpenPerson} />
 
           <Adapt id={id} />
 
@@ -413,5 +450,189 @@ function Adapt({ id }: { id: string }) {
         </dl>
       )}
     </Section>
+  );
+}
+
+/** Friends and comparisons (owner, 23 Oct 2026): whom this person invited, and each friendship. Logged. */
+function Friends({ id, name, onOpenPerson }: { id: string; name: string; onOpenPerson: (id: string) => void }) {
+  const friends = useAsync(() => api.personFriends(id), [id]);
+  const [open, setOpen] = useState<string | null>(null);
+  const list = friends.data ?? [];
+  const invited = list.filter((f) => f.invited_by_them);
+  const arrived = invited.filter((f) => f.friend_arrived_by_invite).length;
+  return (
+    <Section title="Amigos y comparaciones">
+      {friends.error && <ErrorNote>{friends.error}</ErrorNote>}
+      {friends.loading && !friends.data ? (
+        <Loading />
+      ) : list.length === 0 ? (
+        <p className="muted">Todavía sin amigos en Natus.</p>
+      ) : (
+        <div className="stack-s">
+          <p>
+            {invited.length === 0
+              ? 'No ha invitado a nadie que aceptara.'
+              : `Invitó a ${int(invited.length)} ${invited.length === 1 ? 'persona que aceptó' : 'personas que aceptaron'}${
+                  arrived ? (arrived === 1 ? ', y 1 llegó nueva a Natus por su invitación' : `, y ${int(arrived)} llegaron nuevas a Natus por su invitación`) : ''
+                }.`}{' '}
+            Tiene {int(list.length)} {list.length === 1 ? 'amistad' : 'amistades'} en total.
+          </p>
+          <div className="table-wrap">
+            <table className="table clickable">
+              <thead>
+                <tr>
+                  <th>Amigo</th>
+                  <th>Quién invitó</th>
+                  <th>Desde</th>
+                  <th className="r">Comparaciones</th>
+                  <th>Llegó por su invitación</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {list.map((f) => (
+                  <tr key={f.friendship_id} tabIndex={0} onClick={() => setOpen(f.friendship_id)} onKeyDown={(e) => e.key === 'Enter' && setOpen(f.friendship_id)}>
+                    <td>{f.friend_name ?? 'Sin nombre'}</td>
+                    <td>{f.invited_by_them ? name : f.friend_name ?? 'Su amigo'}</td>
+                    <td>{date(f.since)}</td>
+                    <td className="r">{int(f.comparisons)}</td>
+                    <td>{f.invited_by_them ? (f.friend_arrived_by_invite ? 'sí (estimado)' : <span className="muted">no, ya tenía cuenta</span>) : <span className="muted">—</span>}</td>
+                    <td>
+                      {f.status === 'removed' ? (
+                        <span className="muted">
+                          terminada{f.ended_at ? ` el ${date(f.ended_at)}` : ''}
+                          {f.ended_by_them ? ` por ${name}` : ''}
+                        </span>
+                      ) : (
+                        'activa'
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="muted small">Toca un amigo para ver qué pasó entre los dos. Queda registrado para las dos personas.</p>
+          {open && <FriendshipView id={open} onClose={() => setOpen(null)} onOpenPerson={onOpenPerson} />}
+        </div>
+      )}
+    </Section>
+  );
+}
+
+const ASPECT_FLOW: Record<string, string> = { fluye: 'fluye', pide_trabajo: 'pide trabajo' };
+
+/** One friendship: who invited, who accepted, its comparisons. The text only while it lasts (owner, 23 Oct 2026). */
+function FriendshipView({ id, onClose, onOpenPerson }: { id: string; onClose: () => void; onOpenPerson: (id: string) => void }) {
+  const fs = useAsync(() => api.friendship(id), [id]);
+  const [read, setRead] = useState<string | null>(null);
+  const f: Friendship | null | undefined = fs.data;
+  const nameOf = (uid: string) => (f && uid === f.requester.id ? f.requester.name : f?.addressee.name) ?? 'Sin nombre';
+  return (
+    <div className="friendship">
+      <div className="row-between">
+        <h3 className="h-section">{f ? `${f.requester.name ?? 'Sin nombre'} y ${f.addressee.name ?? 'Sin nombre'}` : 'Amistad'}</h3>
+        <button type="button" className="btn ghost" onClick={onClose}>
+          Cerrar
+        </button>
+      </div>
+      {fs.error && <ErrorNote>{fs.error}</ErrorNote>}
+      {!f ? (
+        fs.loading && <Loading />
+      ) : (
+        <div className="stack-s">
+          <dl className="facts">
+            <dt>Invitó</dt>
+            <dd>{f.requester.name ?? 'Sin nombre'}</dd>
+            <dt>Aceptó</dt>
+            <dd>
+              {f.addressee.name ?? 'Sin nombre'}
+              {f.addressee.arrived_by_invite && <span className="muted"> · llegó nuevo a Natus por la invitación (estimado)</span>}
+            </dd>
+            <dt>Amigos desde</dt>
+            <dd>{dateTime(f.since)}</dd>
+            <dt>Estado</dt>
+            <dd>
+              {f.status === 'removed'
+                ? `Terminada${f.ended_at ? ` el ${dateTime(f.ended_at)}` : ''}${f.ended_by ? ` por ${nameOf(f.ended_by)}` : ''}`
+                : 'Activa'}
+            </dd>
+          </dl>
+          <h3 className="h-sub">Sus comparaciones</h3>
+          {f.comparisons.length === 0 ? (
+            <p className="muted">Todavía no se comparan.</p>
+          ) : (
+            <ol className="timeline">
+              {f.comparisons.map((c) => (
+                <li key={c.id}>
+                  <span className="muted">{dateTime(c.created_at)}</span> · la pidió {nameOf(c.asked_by)} · {int(c.aspects)} aspectos{' '}
+                  {f.readable && c.result ? (
+                    <button type="button" className="link small" onClick={() => setRead(read === c.id ? null : c.id)}>
+                      {read === c.id ? 'Cerrar' : 'Leer la comparación'}
+                    </button>
+                  ) : null}
+                  {read === c.id && c.result && <ComparisonText result={c.result} />}
+                </li>
+              ))}
+            </ol>
+          )}
+          <p className="muted small">
+            {f.readable
+              ? 'Leer el texto queda registrado, como el chat.'
+              : 'Se desconectaron: queda que la amistad existió, pero el texto de sus comparaciones ya no se puede leer, tampoco aquí.'}{' '}
+            Cuándo abrió cada uno el link y la comparación, y su conversación con Davraz sobre ella, todavía no se registran.
+          </p>
+          <div className="row-start">
+            <button type="button" className="btn ghost" onClick={() => onOpenPerson(f.requester.id)}>
+              Ficha de {f.requester.name ?? 'quien invitó'}
+            </button>
+            <button type="button" className="btn ghost" onClick={() => onOpenPerson(f.addressee.id)}>
+              Ficha de {f.addressee.name ?? 'quien aceptó'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ComparisonText({ result }: { result: Record<string, unknown> }) {
+  const list = (k: string) => (Array.isArray(result[k]) ? (result[k] as unknown[]).map(str) : []);
+  const aspects = (get(result, 'astro_dialogue', 'aspects') as Record_[] | undefined) ?? [];
+  const parts: [string, string[]][] = [
+    ['Lo bueno', list('lo_bueno')],
+    ['Tener en cuenta', list('tener_en_cuenta')],
+    ['Qué trabajar', list('que_trabajar')],
+    ['Disfrutar juntos', list('disfrutar_juntos')],
+  ];
+  return (
+    <div className="comparison-text">
+      <p className="pre">{str(result['headline'])}</p>
+      {parts.map(([t, items]) =>
+        items.length ? (
+          <div key={t}>
+            <p className="h-sub">{t}</p>
+            <ul>
+              {items.map((x, i) => (
+                <li key={i}>{x}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null,
+      )}
+      {aspects.length > 0 && (
+        <div>
+          <p className="h-sub">Aspectos</p>
+          <ul>
+            {aspects.map((a, i) => (
+              <li key={i}>
+                {str(a['a_body'])} {str(a['type'])} {str(a['b_body'])}
+                {a['flow'] ? <span className="muted"> · {ASPECT_FLOW[str(a['flow'])] ?? str(a['flow'])}</span> : null}: {str(a['reading'])}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
