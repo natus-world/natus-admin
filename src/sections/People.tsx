@@ -66,6 +66,7 @@ function PeopleList({ onOpen }: { onOpen: (id: string) => void }) {
               <thead>
                 <tr>
                   <th>Persona</th>
+                  <th>País</th>
                   <th>Se sumó</th>
                   <th>Origen</th>
                   <th>Desde</th>
@@ -86,6 +87,7 @@ function PeopleList({ onOpen }: { onOpen: (id: string) => void }) {
                       <br />
                       <span className="muted small">{p.email ?? '—'}</span>
                     </td>
+                    <td>{p.country ? countryName(p.country) : <span className="muted">—</span>}</td>
                     <td>{dateTime(p.joined_at)}</td>
                     <td>{label(SOURCE, p.source ?? '')}</td>
                     <td>{p.device ? deviceLabel(p.device) : <span className="muted">—</span>}</td>
@@ -107,6 +109,17 @@ function PeopleList({ onOpen }: { onOpen: (id: string) => void }) {
       </Section>
     </div>
   );
+}
+
+const COUNTRY_NAMES = new Intl.DisplayNames(['es'], { type: 'region' });
+/** «CL» → «Chile», in the browser's own Spanish names, as the app lists them. */
+function countryName(code: string): string {
+  if (code === 'XX') return 'Otro país';
+  try {
+    return COUNTRY_NAMES.of(code) ?? code;
+  } catch {
+    return code;
+  }
 }
 
 /** Which free things a person has used up; «sin tope» for Premium. */
@@ -166,7 +179,7 @@ function PersonView({ id, onBack, onOpenPerson }: { id: string; onBack: () => vo
                   {str(get(p, 'birth', 'city'))} {str(get(p, 'birth', 'country'))}
                 </dd>
                 <dt>Vive en</dt>
-                <dd>{str(p['country']) || '—'}</dd>
+                <dd>{str(p['country']) ? countryName(str(p['country'])) : '—'}</dd>
                 <dt>Cómo quiere que le hablen</dt>
                 <dd>{str(p['gender']) || '—'}</dd>
                 <dt>Lo que le trae</dt>
