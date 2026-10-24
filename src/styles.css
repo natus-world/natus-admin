@@ -1924,3 +1924,191 @@ html:has(.app.v2) body {
   min-width: 0;
   max-width: 100%;
 }
+
+/* «Sugerir un cambio»: the team's suggestions, at hand on every page. */
+.sug-fab {
+  position: fixed;
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 35;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--glass-bar);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgb(255 255 255 / 0.18);
+  color: var(--ink);
+  cursor: pointer;
+  font: 500 13px/1 var(--sans);
+  box-shadow: var(--shadow);
+}
+.sug-fab .ico {
+  width: 14px;
+  height: 14px;
+}
+.sug-fab .n {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #0b120e;
+  display: inline-grid;
+  place-items: center;
+  font: 600 11px/1 var(--sans);
+}
+.sug-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 42;
+  width: min(440px, 100%);
+  display: flex;
+  flex-direction: column;
+  background: var(--glass-sheet);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+  border-left: 1px solid var(--glass-border);
+  border-radius: 20px 0 0 20px;
+  box-shadow: var(--shadow);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.sug-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--line);
+}
+.sug-head h2 {
+  font: 300 1.8rem/1.1 var(--serif);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+}
+.sug-body {
+  flex: 1;
+  overflow: auto;
+  padding: 16px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sug-intro {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.sug-empty {
+  border: 1px dashed var(--line-2);
+  border-radius: 12px;
+  padding: 16px;
+  color: var(--ink-2);
+  font-size: 13px;
+  text-align: center;
+}
+.sm {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgb(236 226 208 / 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sm.mine {
+  border-color: var(--line-2);
+  background: rgb(236 226 208 / 0.08);
+}
+.sm-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+.sm-h b {
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 13px;
+}
+.sm-sec {
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  padding: 0 7px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  font: 400 11.5px/1.6 var(--sans);
+}
+.sm-sec:disabled {
+  cursor: default;
+}
+.sm-t {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.sm-del {
+  margin-left: auto;
+  background: none;
+  border: 0;
+  color: var(--ink-3);
+  cursor: pointer;
+  font: 400 11.5px var(--sans);
+  text-decoration: underline;
+  padding: 0;
+}
+.sug-foot {
+  border-top: 1px solid var(--line);
+  padding: 12px 22px calc(14px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sug-foot label {
+  font-size: 12px;
+  color: var(--ink-3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sug-foot select,
+.sug-foot textarea {
+  background: rgb(var(--v) / 0.5);
+  border: 1px solid var(--line-2);
+  color: var(--ink);
+  border-radius: 8px;
+  font: 400 13px/1.4 var(--sans);
+  padding: 6px 8px;
+}
+.sug-foot textarea {
+  width: 100%;
+  min-height: 76px;
+  resize: vertical;
+  font-size: 14px;
+}
+.sug-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sug-row .st {
+  font-size: 12px;
+  color: var(--ink-3);
+  flex: 1;
+  min-width: 0;
+}
+.sug-row .st.err {
+  color: var(--crit-ink);
+}
+.sug-row .btn {
+  height: auto;
+  padding: 7px 14px;
+}

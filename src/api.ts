@@ -265,6 +265,16 @@ export type PersonRow = {
   comparison_left: number | null;
 };
 
+export type TeamSuggestion = {
+  id: string;
+  author_id: string | null;
+  author_name: string | null;
+  section: string;
+  body: string;
+  created_at: string;
+  mine: boolean;
+};
+
 const one = <T,>(rows: T[] | null): T | null => (rows && rows[0]) ?? null;
 
 export const api = {
@@ -336,5 +346,9 @@ export const api = {
     call<Inviter[]>('admin_top_inviters', { p_from: from, p_to: to, p_limit: 20 }),
   personFriends: (id: string) => call<PersonFriend[]>('admin_person_friends', { p_user: id }),
   friendship: (id: string) => call<Friendship | null>('admin_friendship', { p_id: id }),
+  teamSuggestions: () => call<TeamSuggestion[]>('admin_suggestions_list'),
+  addTeamSuggestion: (section: string, body: string) =>
+    call<string>('admin_suggestion_add', { p_section: section, p_body: body }),
+  deleteTeamSuggestion: (id: string) => call<null>('admin_suggestion_delete', { p_id: id }),
   peopleList: (query: string) => call<PersonRow[]>('admin_people_list', { p_query: query, p_limit: 200 }),
 };

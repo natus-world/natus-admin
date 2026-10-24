@@ -10,6 +10,7 @@ import { Sirve } from './sections/Sirve';
 import { Vuelven } from './sections/Vuelven';
 import { Pagan } from './sections/Pagan';
 import { TipLayer } from './charts';
+import { TeamSuggestions } from './TeamSuggestions';
 import { date, int } from './format';
 import type { ViewProps } from './sections/views';
 import { Suggestions } from './sections/Suggestions';
@@ -154,6 +155,11 @@ function Panel({ email, route, go }: { email: string; route: Route; go: (r: Rout
       <div className="foto" aria-hidden="true" />
       <div className="velo" aria-hidden="true" />
       <TipLayer />
+      <TeamSuggestions
+        section={current.key}
+        sections={SECTIONS.map((s) => ({ key: s.key, label: s.label }))}
+        onGo={(key) => go({ section: key, id: null })}
+      />
       <aside className="side">
         <p className="brand">
           Natus <em>admin</em>
