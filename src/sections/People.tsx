@@ -528,6 +528,13 @@ function FriendshipView({ id, onClose, onOpenPerson }: { id: string; onClose: ()
   const [read, setRead] = useState<string | null>(null);
   const f: Friendship | null | undefined = fs.data;
   const nameOf = (uid: string) => (f && uid === f.requester.id ? f.requester.name : f?.addressee.name) ?? 'Sin nombre';
+  // Reads are recorded since 24 Oct 2026: before that, no read is not «unread».
+  const readBy = (c: Friendship['comparisons'][number]) => {
+    if (!f) return '';
+    const other = nameOf(c.asked_by === f.requester.id ? f.addressee.id : f.requester.id);
+    if (c.read_by_other_at) return `${other} la abrió el ${dateTime(c.read_by_other_at)}`;
+    return c.created_at < '2026-10-24' ? `sin dato de si ${other} la abrió` : `${other} todavía no la abre`;
+  };
   return (
     <div className="friendship">
       <div className="row-between">
@@ -547,8 +554,18 @@ function FriendshipView({ id, onClose, onOpenPerson }: { id: string; onClose: ()
             <dt>Aceptó</dt>
             <dd>
               {f.addressee.name ?? 'Sin nombre'}
-              {f.addressee.arrived_by_invite && <span className="muted"> · llegó nuevo a Natus por la invitación (estimado)</span>}
+              {f.addressee.arrived_by_link ? (
+                <span className="muted"> · llegó nuevo a Natus por el link de la invitación</span>
+              ) : (
+                f.addressee.arrived_by_invite && <span className="muted"> · llegó nuevo a Natus por la invitación (estimado)</span>
+              )}
             </dd>
+            {f.addressee.opened_invite_at && (
+              <>
+                <dt>Abrió el link</dt>
+                <dd>{dateTime(f.addressee.opened_invite_at)}</dd>
+              </>
+            )}
             <dt>Amigos desde</dt>
             <dd>{dateTime(f.since)}</dd>
             <dt>Estado</dt>
@@ -565,7 +582,8 @@ function FriendshipView({ id, onClose, onOpenPerson }: { id: string; onClose: ()
             <ol className="timeline">
               {f.comparisons.map((c) => (
                 <li key={c.id}>
-                  <span className="muted">{dateTime(c.created_at)}</span> · la pidió {nameOf(c.asked_by)} · {int(c.aspects)} aspectos{' '}
+                  <span className="muted">{dateTime(c.created_at)}</span> · la pidió {nameOf(c.asked_by)} · {int(c.aspects)} aspectos ·{' '}
+                  <span className="muted">{readBy(c)}</span>{' '}
                   {f.readable && c.result ? (
                     <button type="button" className="link small" onClick={() => setRead(read === c.id ? null : c.id)}>
                       {read === c.id ? 'Cerrar' : 'Leer la comparación'}
@@ -580,8 +598,24 @@ function FriendshipView({ id, onClose, onOpenPerson }: { id: string; onClose: ()
             {f.readable
               ? 'Leer el texto queda registrado, como el chat.'
               : 'Se desconectaron: queda que la amistad existió, pero el texto de sus comparaciones ya no se puede leer, tampoco aquí.'}{' '}
-            Cuándo abrió cada uno el link y la comparación, y su conversación con Davraz sobre ella, todavía no se registran.
+            El link abierto, la lectura de la otra persona y el chat sobre la amistad se registran desde el 24 oct.
           </p>
+          <h3 className="h-sub">Lo que conversaron con Davraz sobre la amistad</h3>
+          {f.chat.length === 0 ? (
+            <p className="muted">Nadie le ha escrito a Davraz sobre esta amistad.</p>
+          ) : (
+            <ol className="timeline">
+              {f.chat.map((m, i) => (
+                <li key={i}>
+                  <span className="muted">
+                    {dateTime(m.at)} · {m.role === 'assistant' ? 'Davraz' : nameOf(m.user_id)}
+                    {m.role === 'assistant' ? ` a ${nameOf(m.user_id)}` : ''}
+                  </span>
+                  <p className="pre">{m.text}</p>
+                </li>
+              ))}
+            </ol>
+          )}
           <div className="row-start">
             <button type="button" className="btn ghost" onClick={() => onOpenPerson(f.requester.id)}>
               Ficha de {f.requester.name ?? 'quien invitó'}

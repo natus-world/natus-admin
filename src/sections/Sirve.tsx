@@ -3,11 +3,28 @@ import { Few, Funnel, HBars, Heatmap, Kpi } from '../charts';
 import { int } from '../format';
 import { ErrorNote, useAsync } from '../ui';
 import { Card, Head, share, pctText, type ViewProps } from './views';
-import { dayIso } from '../format';
+import { addDays, dayIso } from '../format';
 
 const FIRST: Record<string, string> = { chat: 'Davraz', practica: 'Una práctica', bitacora: 'La bitácora', nada: 'Todavía nada' };
 /** «empieza por …»: the same, inside a sentence. */
 const FIRST_IN: Record<string, string> = { Davraz: 'Davraz', 'Una práctica': 'una práctica', 'La bitácora': 'la bitácora' };
+
+/** The tab keys the app records with `screen_viewed`. */
+const SCREEN: Record<string, string> = {
+  hoy: 'Hoy',
+  carta: 'Carta',
+  'carta-completa': 'Carta completa',
+  caminos: 'Caminos',
+  recorrido: 'Tu rutina',
+  bitacora: 'Bitácora',
+  chat: 'Chat',
+  perfil: 'Perfil',
+  meditaciones: 'Meditaciones',
+  biblioteca: 'Biblioteca',
+  comparacion: 'Comparar con un amigo',
+  'comparacion-resultado': 'Resultado de una comparación',
+  'comparacion-cartas': 'Las dos cartas',
+};
 
 /** Cohorts whose first week is already over: activation needs its seven days. */
 export function settledCohorts<T extends { week_start: string; accounts: number }>(rows: T[]): T[] {
@@ -26,6 +43,7 @@ export function Sirve({ period, onOpenPerson }: ViewProps) {
   const therapies = useAsync(() => api.byModality(period.from, period.to), [period.from, period.to]);
   const heat = useAsync(() => api.heatmap(period.from, period.to), [period.from, period.to]);
   const ratings = useAsync(() => api.ratings(period.from, period.to), [period.from, period.to]);
+  const screens = useAsync(() => api.screens(period.from, period.to), [period.from, period.to]);
 
   const cohorts = settledCohorts(retention.data ?? []);
   const accounts = cohorts.reduce((s, r) => s + Number(r.accounts), 0);
@@ -37,6 +55,11 @@ export function Sirve({ period, onOpenPerson }: ViewProps) {
   const dayRows = (days.data ?? []).map((r) => ({ label: r.bucket === '1' ? '1 día' : r.bucket === '2-3' ? '2 o 3 días' : '4 o más', value: Number(r.people) }));
   const dayTotal = dayRows.reduce((s, r) => s + r.value, 0);
   const lastWeek = weekly.data?.[0];
+  const weekScreens = useAsync(
+    () => (lastWeek ? api.screens(lastWeek.week_start, addDays(lastWeek.week_start, 6)) : Promise.resolve([])),
+    [lastWeek?.week_start],
+  );
+  const readChart = Number(weekScreens.data?.find((r) => r.screen === 'carta')?.people ?? 0);
   const doRows = lastWeek
     ? [
         { label: 'Le escribieron a Davraz', value: Number(lastWeek.chat) },
@@ -44,9 +67,13 @@ export function Sirve({ period, onOpenPerson }: ViewProps) {
         { label: 'Escribieron en la bitácora', value: Number(lastWeek.journal) },
         { label: 'Escucharon una meditación', value: Number(lastWeek.meditations) },
         { label: 'Se compararon con alguien', value: Number(lastWeek.comparisons) },
+        { label: 'Abrieron su carta', value: readChart },
       ].sort((a, b) => b.value - a.value)
     : [];
   const activeLast = Number(lastWeek?.active ?? 0);
+  const screenRows = (screens.data ?? [])
+    .map((r) => ({ label: SCREEN[r.screen] ?? r.screen, value: Number(r.people) }))
+    .sort((a, b) => b.value - a.value);
   const f = friends.data;
   const compFree = free.data?.find((r) => r.feature === 'comparison');
   const ratingTotal = (ratings.data ?? []).reduce((s, r) => s + Number(r.n), 0);
@@ -95,9 +122,20 @@ export function Sirve({ period, onOpenPerson }: ViewProps) {
       <Card
         title={topDo && topDo.value > 0 ? `Qué hacen: lo más común es que ${topDo.label.toLowerCase()}` : 'Qué hacen'}
         sub={`De ${int(activeLast)} personas con cuenta que abrieron la app la última semana`}
-        aside={<span className="tag new">«Leyeron su carta» necesita un dato nuevo</span>}
       >
         <HBars rows={doRows.map((r) => ({ ...r, text: pctText(share(r.value, activeLast)), tip: `${int(r.value)} personas` }))} max={Math.max(1, activeLast)} />
+      </Card>
+
+      <Card
+        title={screenRows[0] ? `Qué pantallas abren: la que más, ${screenRows[0].label}` : 'Qué pantallas abren'}
+        sub="Personas con cuenta que abrieron cada pantalla en el periodo, una vez por día. Se registra desde el 24 oct."
+      >
+        {screens.error && <ErrorNote>{screens.error}</ErrorNote>}
+        {screenRows.length ? (
+          <HBars rows={screenRows.map((r) => ({ ...r, text: int(r.value), tip: `${int(r.value)} personas` }))} />
+        ) : (
+          <p className="small muted">Todavía no hay datos en este periodo.</p>
+        )}
       </Card>
 
       <Card
@@ -110,9 +148,20 @@ export function Sirve({ period, onOpenPerson }: ViewProps) {
             <Funnel
               rows={[
                 { label: 'Compartieron su link', people: Number(f.shared), tip: 'Personas' },
+                {
+                  label: 'Abrieron un link de invitación',
+                  people: Number(f.opened_invite) || null,
+                  pending: 'desde el 24 oct',
+                  tip: 'Personas, con o sin cuenta, que abrieron el link de alguien',
+                },
                 { label: 'Amistades nuevas', people: Number(f.befriended), tip: `${int(f.accepted)} personas invitaron y alguien aceptó` },
                 { label: 'Amistades que se compararon', people: Number(f.compared), tip: 'Amistades con al menos una comparación en el periodo' },
-                { label: 'Conversaron con Davraz sobre ella', people: null, pending: 'falta registrarlo', newData: true },
+                {
+                  label: 'Conversaron con Davraz sobre ella',
+                  people: Number(f.talked) || null,
+                  pending: 'desde el 24 oct',
+                  tip: 'Amistades sobre las que alguien le escribió a Davraz desde la comparación',
+                },
               ]}
             />
             <div className="grid g3 inner">

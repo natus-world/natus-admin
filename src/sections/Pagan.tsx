@@ -26,6 +26,8 @@ export function Pagan({ period, onOpenPerson }: ViewProps) {
   const c = new Map((funnel.data ?? []).map((r) => [r.step, Number(r.people)]));
   const accounts = c.get('account_created') ?? 0;
   const sawPremium = c.get('paywall_seen') ?? 0;
+  const tapped = c.get('trial_tapped') ?? 0;
+  const approved = c.get('trial_approved') ?? 0;
   const trials = c.get('trial_started') ?? 0;
   const charges = c.get('first_charge') ?? 0;
   const list = premium.data ?? [];
@@ -143,12 +145,12 @@ export function Pagan({ period, onOpenPerson }: ViewProps) {
         <p className="small muted">«Después» es desde la última vez que usaron eso hasta hoy.</p>
       </Card>
 
-      <Card title="Del aviso al cobro" sub="Con la referencia de la industria al lado de cada paso" aside={<span className="tag new">2 pasos necesitan datos nuevos</span>}>
+      <Card title="Del aviso al cobro" sub="Con la referencia de la industria al lado de cada paso">
         <Funnel
           rows={[
             { label: 'Vieron Premium', people: sawPremium },
-            { label: 'Tocaron «Empezar mes gratis»', people: null, pending: 'falta registrarlo', newData: true },
-            { label: 'Volvieron de PayPal', people: null, pending: 'falta registrarlo', newData: true },
+            { label: 'Tocaron «Empezar mes gratis»', people: tapped || null, pending: 'desde el 24 oct' },
+            { label: 'Volvieron de PayPal', people: approved || null, pending: 'desde el 24 oct' },
             { label: 'Empezaron el mes gratis', people: trials, reference: '~11% de las cuentas' },
             { label: 'Primer cobro', people: charges || null, pending: 'todavía no', reference: '35% de las pruebas' },
           ]}

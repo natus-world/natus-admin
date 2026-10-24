@@ -34,10 +34,13 @@ green only for several series (`src/charts.tsx`, hand-drawn SVG, every mark
 with a hover). The main number is people active per week (owner). A
 friendship that ended shows that it existed, never its comparisons' text
 (owner). Functions: `20261024010000_admin_panel_v2.sql` in natus-mvp.
-Not yet measured, marked «dato nuevo» on the pages: screens viewed, the tap
-on «Empezar mes gratis», the return from PayPal, the invite link opened, a
-comparison opened by the other friend, the chat about a comparison, and a
-certain arrival by invitation (today estimated by dates).
+Measured since 24 Oct 2026 (`20261024030000_funnel_owed_to_the_panel.sql`),
+so a step reads «desde el 24 oct» while it has nothing in the period: screens
+viewed («Qué pantallas abren», «Abrieron su carta»), the tap on «Empezar mes
+gratis» and the return from PayPal, the invite link opened, the invite link
+as origin («Invitación de un amigo»), a comparison opened by the other
+friend and the chat about a friendship (shown in the friendship, also after
+it ended). Arrivals before that date are still estimated by dates.
 
 ## Adding something
 

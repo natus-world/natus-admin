@@ -209,6 +209,10 @@ export type Friends = {
   comparisons: number;
   active_friendships: number;
   ended: number;
+  /** Friendships with at least one chat turn about them in the period. */
+  talked: number;
+  /** People (with or without an account) who opened an invite link. */
+  opened_invite: number;
 };
 export type Inviter = {
   user_id: string;
@@ -238,15 +242,26 @@ export type Friendship = {
   ended_at: string | null;
   ended_by: string | null;
   requester: { id: string; name: string | null };
-  addressee: { id: string; name: string | null; arrived_by_invite: boolean };
+  addressee: {
+    id: string;
+    name: string | null;
+    arrived_by_invite: boolean;
+    /** Started the onboarding from an invite link (recorded since 24 Oct 2026). */
+    arrived_by_link: boolean;
+    opened_invite_at: string | null;
+  };
   readable: boolean;
   comparisons: {
     id: string;
     created_at: string;
     asked_by: string;
     aspects: number;
+    /** When the friend who did not ask first opened it (since 24 Oct 2026). */
+    read_by_other_at: string | null;
     result: Record<string, unknown> | null;
   }[];
+  /** Chat turns about this friendship, kept after it ends. */
+  chat: { user_id: string; role: 'user' | 'assistant'; text: string; at: string }[];
 };
 export type PersonRow = {
   user_id: string;
@@ -345,6 +360,8 @@ export const api = {
   topInviters: (from: string, to: string) =>
     call<Inviter[]>('admin_top_inviters', { p_from: from, p_to: to, p_limit: 20 }),
   personFriends: (id: string) => call<PersonFriend[]>('admin_person_friends', { p_user: id }),
+  screens: (from: string, to: string) =>
+    call<{ screen: string; people: number }[]>('admin_screens', { p_from: from, p_to: to }),
   friendship: (id: string) => call<Friendship | null>('admin_friendship', { p_id: id }),
   teamSuggestions: () => call<TeamSuggestion[]>('admin_suggestions_list'),
   addTeamSuggestion: (section: string, body: string) =>

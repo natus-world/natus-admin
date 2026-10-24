@@ -31,3 +31,10 @@ export function dayIso(daysAgo = 0): string {
   const d = new Date(Date.now() - daysAgo * 86_400_000);
   return d.toLocaleDateString('en-CA', { timeZone: tz });
 }
+
+/** A YYYY-MM-DD `days` later, on the calendar (no time zone involved). */
+export function addDays(iso: string, days: number): string {
+  const d = new Date(`${iso}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}

@@ -59,6 +59,7 @@ export const SOURCE: Record<string, string> = {
   youtube: 'YouTube',
   google: 'Google',
   'web-natus': 'Web de Natus',
+  invitacion: 'Invitación de un amigo',
   otro: 'Otra página',
   '': 'Sin dato',
 };
