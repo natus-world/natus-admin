@@ -87,7 +87,9 @@ function PeopleList({ onOpen }: { onOpen: (id: string) => void }) {
                       <br />
                       <span className="muted small">{p.email ?? '—'}</span>
                     </td>
-                    <td>{p.country ? countryName(p.country) : <span className="muted">—</span>}</td>
+                    <td title={p.country ? countryName(p.country) : undefined}>
+                      {p.country && p.country !== 'XX' ? p.country : <span className="muted">—</span>}
+                    </td>
                     <td>{dateTime(p.joined_at)}</td>
                     <td>{label(SOURCE, p.source ?? '')}</td>
                     <td>{p.device ? deviceLabel(p.device) : <span className="muted">—</span>}</td>
