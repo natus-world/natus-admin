@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { previousPeriod, type Period } from '../ui';
+import type { Segment } from '../api';
 
 /** What every page of the four questions receives from the bar on top. */
 export type ViewProps = {
@@ -7,6 +8,9 @@ export type ViewProps = {
   compare: boolean;
   onOpenPerson: (id: string) => void;
   go: (section: string) => void;
+  /** The filter on top, and a way to change it (rows of «Quiénes son», the map). */
+  segment?: Segment;
+  onSegment?: (s: Segment) => void;
 };
 
 export const prevOf = (p: Period) => previousPeriod(p);

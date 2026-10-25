@@ -45,6 +45,14 @@ Each person's file opens «Su carta» on request (logged, `admin_person_chart`):
 what it was cast from, warnings (no hour, a city typed and not picked,
 readings of an older chart), every point with Davraz's reading, the aspects;
 and a comparison shows its twelve areas and how Davraz read each cross.
+Segments (owner, 24 Oct 2026, approved mockup «Panel Natus · segmentos»):
+the bar holds «Segmento» (`src/segment.tsx`) — country where they live or
+were born, age band, how they are addressed — kept per admin on the server,
+so it stays across pages and reloads; the page under it remounts on change
+(`version`). Every number follows it, and so does the people list. «Quiénes
+son» (`sections/Quienes.tsx`) shows the groups and a map (`CountryMap.tsx`,
+loaded only there: d3-geo, Natural Earth 1:110m from world-atlas,
+i18n-iso-countries for the codes); a row or a circle sets the filter.
 
 ## Adding something
 

@@ -297,6 +297,16 @@ export type PersonChart = {
   readings_version: string | null;
   readings_current: boolean;
 };
+/** The panel's filter (owner, 24 Oct 2026): kept per admin on the server. */
+export type Segment = { place?: 'vive' | 'nacio'; countries?: string[]; age?: string; gender?: string };
+export type WhoRow = {
+  dimension: 'vive' | 'nacio' | 'edad' | 'genero';
+  value: string;
+  accounts: number;
+  activated: number;
+  trial: number;
+  active_7d: number;
+};
 export type PersonRow = {
   user_id: string;
   email: string | null;
@@ -396,6 +406,10 @@ export const api = {
   personFriends: (id: string) => call<PersonFriend[]>('admin_person_friends', { p_user: id }),
   screens: (from: string, to: string) =>
     call<{ screen: string; people: number }[]>('admin_screens', { p_from: from, p_to: to }),
+  segmentGet: () => call<Segment>('admin_segment_get'),
+  segmentSet: (segment: Segment) => call<Segment>('admin_segment_set', { p_segment: segment }),
+  segmentCount: () => call<{ in_segment: number; total: number }[]>('admin_segment_count'),
+  who: (all = false) => call<WhoRow[]>('admin_who', { p_all: all }),
   personChart: (id: string) => call<PersonChart | null>('admin_person_chart', { p_user: id }),
   friendship: (id: string) => call<Friendship | null>('admin_friendship', { p_id: id }),
   teamSuggestions: () => call<TeamSuggestion[]>('admin_suggestions_list'),

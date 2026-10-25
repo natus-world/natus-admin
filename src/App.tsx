@@ -18,6 +18,9 @@ import { Gift } from './sections/Gift';
 import { Alerts } from './sections/Alerts';
 import { Expenses } from './sections/Expenses';
 import { Errors } from './sections/Errors';
+import { Quienes } from './sections/Quienes';
+import { SegmentBar, describe, isEmpty } from './segment';
+import type { Segment } from './api';
 
 /**
  * The sections of the panel, ordered by four questions (owner, 23 Oct 2026,
@@ -29,16 +32,19 @@ type Route = { section: string; id: string | null };
 type Nav = { open: (r: Route) => void };
 type Ctx = { route: Route; nav: Nav; view: ViewProps };
 
-const SECTIONS: { key: string; label: string; group: string; question?: boolean; render: (c: Ctx) => ReactNode }[] = [
-  { key: 'pulso', label: 'Pulso', group: '', question: true, render: (c) => <Pulso {...c.view} /> },
-  { key: 'llegan', label: '¿Llegan?', group: 'Las cuatro preguntas', question: true, render: (c) => <Llegan {...c.view} /> },
-  { key: 'sirve', label: '¿Les sirve?', group: 'Las cuatro preguntas', question: true, render: (c) => <Sirve {...c.view} /> },
-  { key: 'vuelven', label: '¿Vuelven?', group: 'Las cuatro preguntas', question: true, render: (c) => <Vuelven {...c.view} /> },
-  { key: 'pagan', label: '¿Pagan?', group: 'Las cuatro preguntas', question: true, render: (c) => <Pagan {...c.view} /> },
+/** `question`: the period and the comparison on top. `segment`: the filter on top (owner, 24 Oct 2026). `own`: draws its own page head. */
+const SECTIONS: { key: string; label: string; group: string; question?: boolean; segment?: boolean; own?: boolean; render: (c: Ctx) => ReactNode }[] = [
+  { key: 'pulso', segment: true, label: 'Pulso', group: '', question: true, render: (c) => <Pulso {...c.view} /> },
+  { key: 'llegan', segment: true, label: '¿Llegan?', group: 'Las cuatro preguntas', question: true, render: (c) => <Llegan {...c.view} /> },
+  { key: 'sirve', segment: true, label: '¿Les sirve?', group: 'Las cuatro preguntas', question: true, render: (c) => <Sirve {...c.view} /> },
+  { key: 'vuelven', segment: true, label: '¿Vuelven?', group: 'Las cuatro preguntas', question: true, render: (c) => <Vuelven {...c.view} /> },
+  { key: 'pagan', segment: true, label: '¿Pagan?', group: 'Las cuatro preguntas', question: true, render: (c) => <Pagan {...c.view} /> },
+  { key: 'quienes', label: 'Quiénes son', group: 'Cada persona', segment: true, own: true, render: (c) => <Quienes {...c.view} /> },
   {
     key: 'personas',
     label: 'Personas',
     group: 'Cada persona',
+    segment: true,
     render: ({ route, nav }) => <People open={route.id} onOpen={(id) => nav.open({ section: 'personas', id })} />,
   },
   {
@@ -134,6 +140,28 @@ export function App() {
 function Panel({ email, route, go }: { email: string; route: Route; go: (r: Route) => void }) {
   const [period, setPeriod] = useState<Period>(() => presetPeriod('7'));
   const [compare, setCompare] = useState(true);
+  const [segment, setSegment] = useState<Segment>({});
+  const [version, setVersion] = useState(0);
+  const [segError, setSegError] = useState<string | null>(null);
+  useEffect(() => {
+    api.segmentGet().then(
+      (s) => {
+        setSegment(s ?? {});
+        if (!isEmpty(s)) setVersion((v) => v + 1);
+      },
+      () => undefined,
+    );
+  }, []);
+  const changeSegment = (next: Segment) => {
+    setSegError(null);
+    api.segmentSet(next).then(
+      (s) => {
+        setSegment(s ?? {});
+        setVersion((v) => v + 1);
+      },
+      (e: unknown) => setSegError(messageOf(e)),
+    );
+  };
   const pending = useAsync(() => api.pending(), [route.section]);
   const current = SECTIONS.find((s) => s.key === route.section) ?? SECTIONS[0]!;
   const prev = previousPeriod(period);
@@ -148,6 +176,8 @@ function Panel({ email, route, go }: { email: string; route: Route; go: (r: Rout
     compare,
     onOpenPerson: (id) => go({ section: 'personas', id }),
     go: (section) => go({ section, id: null }),
+    segment,
+    onSegment: changeSegment,
   };
   const groups = [...new Set(SECTIONS.map((s) => s.group))];
   return (
@@ -217,6 +247,8 @@ function Panel({ email, route, go }: { email: string; route: Route; go: (r: Rout
               )}
             </div>
           </div>
+          {current.segment && <SegmentBar segment={segment} onChange={changeSegment} version={version} />}
+          {segError && <ErrorNote>{segError}</ErrorNote>}
           {current.question && (
             <p className="scope">
               Estás viendo <b>{range(period.from, period.to)}</b>
@@ -227,20 +259,28 @@ function Panel({ email, route, go }: { email: string; route: Route; go: (r: Rout
                 </>
               )}{' '}
               · hora de Chile · sin el equipo ni el robot de pruebas
+              {!isEmpty(segment) && (
+                <>
+                  {' '}
+                  · <b>solo cuentas que {describe(segment)}</b>
+                </>
+              )}
             </p>
           )}
         </div>
-        {current.question ? (
-          current.render({ route, nav: { open: go }, view })
-        ) : (
-          <section className="page">
-            <div className="head">
-              <span className="kick">{current.group}</span>
-              <h1>{current.label}</h1>
-            </div>
-            {current.render({ route, nav: { open: go }, view })}
-          </section>
-        )}
+        <div key={version} className="page-slot">
+          {current.question || current.own ? (
+            current.render({ route, nav: { open: go }, view })
+          ) : (
+            <section className="page">
+              <div className="head">
+                <span className="kick">{current.group}</span>
+                <h1>{current.label}</h1>
+              </div>
+              {current.render({ route, nav: { open: go }, view })}
+            </section>
+          )}
+        </div>
       </main>
     </div>
   );

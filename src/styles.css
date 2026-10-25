@@ -2143,3 +2143,166 @@ html:has(.app.v2) body {
     color: var(--ink-2);
   }
 }
+
+/* ── Segments (owner, 24 Oct 2026): the filter on top, «Quiénes son», the map. */
+.app.v2 .page-slot {
+  display: contents;
+}
+.app.v2 .sgm {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+.app.v2 .sgm-lbl {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.app.v2 .sgm-chip {
+  border: 1px dashed var(--line-2);
+  background: none;
+  color: var(--ink-2);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font: 400 13px/1.2 var(--sans);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.app.v2 .sgm-chip:hover {
+  color: var(--ink);
+  border-color: var(--ink-3);
+}
+.app.v2 .sgm-chip.on {
+  border: 1px solid rgb(201 168 118 / 0.6);
+  background: rgb(201 168 118 / 0.16);
+  color: var(--ink);
+}
+.app.v2 .sgm-count {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.app.v2 .sgm-count b {
+  color: var(--ink);
+  font-weight: 500;
+}
+.app.v2 .sgm-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  width: min(320px, calc(100vw - 48px));
+  max-height: min(420px, 60vh);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--glass-sheet);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+.app.v2 .sgm-menu .seg {
+  align-self: flex-start;
+}
+.app.v2 .sgm-list {
+  display: flex;
+  flex-direction: column;
+}
+.app.v2 .sgm-list button {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: 400 14px/1.3 var(--sans);
+  text-align: left;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.app.v2 .sgm-list button:hover,
+.app.v2 .sgm-list button:focus-visible {
+  background: var(--tab-active);
+}
+.app.v2 .sgm-list .small {
+  margin: 6px 10px 0;
+}
+
+.app.v2 .map-box {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: rgb(236 226 208 / 0.025);
+  border-radius: 12px;
+}
+.app.v2 .map-box .land {
+  fill: rgb(236 226 208 / 0.06);
+  stroke: rgb(236 226 208 / 0.16);
+  stroke-width: 0.6;
+}
+.app.v2 .map-box .land.on {
+  fill: rgb(236 226 208 / 0.13);
+}
+.app.v2 .map-box .dot {
+  fill: var(--s1);
+  fill-opacity: 0.82;
+  stroke: #0b120e;
+  stroke-width: 2;
+  cursor: pointer;
+}
+.app.v2 .map-box .dot:hover,
+.app.v2 .map-box .dot:focus-visible {
+  fill-opacity: 1;
+  outline: none;
+  stroke: var(--ink);
+}
+.app.v2 .map-box .dot.sel {
+  fill: var(--acc);
+  fill-opacity: 1;
+}
+.app.v2 .map-box .dot-lbl {
+  fill: var(--ink);
+  font: 500 13px var(--sans);
+  paint-order: stroke;
+  stroke: #0b120e;
+  stroke-width: 3px;
+  pointer-events: none;
+}
+
+.app.v2 .who td.who-bar {
+  width: 40%;
+}
+.app.v2 .who .tr {
+  display: block;
+  height: 10px;
+  background: var(--sunk);
+  border-radius: 0 4px 4px 0;
+  position: relative;
+}
+.app.v2 .who .tr i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--s1);
+  border-radius: 0 4px 4px 0;
+}
+@media (max-width: 760px) {
+  .app.v2 .who .who-bar,
+  .app.v2 .who .who-bar-h {
+    display: none;
+  }
+}
+.app.v2 .map-box {
+  max-width: 900px;
+  margin-inline: auto;
+}
+@media (max-width: 760px) {
+  .app.v2 .map-box .dot-lbl {
+    font-size: 26px;
+    stroke-width: 6px;
+  }
+}
