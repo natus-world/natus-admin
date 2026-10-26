@@ -19,6 +19,7 @@ import { Alerts } from './sections/Alerts';
 import { Expenses } from './sections/Expenses';
 import { Errors } from './sections/Errors';
 import { Quienes } from './sections/Quienes';
+import { Macro } from './sections/Macro';
 import { SegmentBar, describe, isEmpty } from './segment';
 import type { Segment } from './api';
 
@@ -35,6 +36,7 @@ type Ctx = { route: Route; nav: Nav; view: ViewProps };
 /** `question`: the period and the comparison on top. `segment`: the filter on top (owner, 24 Oct 2026). `own`: draws its own page head. */
 const SECTIONS: { key: string; label: string; group: string; question?: boolean; segment?: boolean; own?: boolean; render: (c: Ctx) => ReactNode }[] = [
   { key: 'pulso', segment: true, label: 'Pulso', group: '', question: true, render: (c) => <Pulso {...c.view} /> },
+  { key: 'macro', segment: true, label: 'Macro datos', group: '', question: true, render: (c) => <Macro {...c.view} /> },
   { key: 'llegan', segment: true, label: '¿Llegan?', group: 'Las cuatro preguntas', question: true, render: (c) => <Llegan {...c.view} /> },
   { key: 'sirve', segment: true, label: '¿Les sirve?', group: 'Las cuatro preguntas', question: true, render: (c) => <Sirve {...c.view} /> },
   { key: 'vuelven', segment: true, label: '¿Vuelven?', group: 'Las cuatro preguntas', question: true, render: (c) => <Vuelven {...c.view} /> },

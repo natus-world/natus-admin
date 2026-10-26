@@ -307,6 +307,20 @@ export type WhoRow = {
   trial: number;
   active_7d: number;
 };
+/** «Macro datos» (owner, 25 Oct 2026): the main numbers for a period, inside the segment. */
+export type Macro = {
+  accounts_total: number;
+  accounts_new: number;
+  activated_new: number;
+  active: number;
+  accounts_before: number;
+  returned: number;
+  trials: number;
+  paying_now: number;
+  trial_now: number;
+  gifted_now: number;
+  ai_spend: number;
+};
 export type PersonRow = {
   user_id: string;
   email: string | null;
@@ -406,6 +420,7 @@ export const api = {
   personFriends: (id: string) => call<PersonFriend[]>('admin_person_friends', { p_user: id }),
   screens: (from: string, to: string) =>
     call<{ screen: string; people: number }[]>('admin_screens', { p_from: from, p_to: to }),
+  macro: (from: string, to: string) => call<Macro[]>('admin_macro', { p_from: from, p_to: to }),
   segmentGet: () => call<Segment>('admin_segment_get'),
   segmentSet: (segment: Segment) => call<Segment>('admin_segment_set', { p_segment: segment }),
   segmentCount: () => call<{ in_segment: number; total: number }[]>('admin_segment_count'),

@@ -53,6 +53,10 @@ so it stays across pages and reloads; the page under it remounts on change
 son» (`sections/Quienes.tsx`) shows the groups and a map (`CountryMap.tsx`,
 loaded only there: d3-geo, Natural Earth 1:110m from world-atlas,
 i18n-iso-countries for the codes); a row or a circle sets the filter.
+«Macro datos» (owner, 25 Oct 2026; `sections/Macro.tsx`, under the Pulso):
+one table of the main numbers for the period, two a row, each with the
+period before when comparing; the «hoy» ones are today's state and carry no
+change. Monthly income is paying × US$ 10 (`PRICE_USD`).
 
 ## Adding something
 
