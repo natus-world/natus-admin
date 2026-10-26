@@ -68,7 +68,8 @@ and a section in `src/sections/` registered in `SECTIONS` in `src/App.tsx`.
 
 Admins are rows in `public.admins` (user id of a Google account that has
 entered Natus), written by hand with SQL — never through the API. Today: the
-owner; his partner next, with the same access. Later hires may get narrower
+owner and his partner Bryant (role `admin`, the same access, since 26 Oct
+2026). Later hires may get narrower
 roles (`admins.role`).
 
 ## Owed: make it private again (owner, 18 Oct 2026)
