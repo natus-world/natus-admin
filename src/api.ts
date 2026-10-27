@@ -157,6 +157,10 @@ export type InboxRow = {
   last_at: string;
   unread: number;
   crisis: boolean;
+  /** The last message went to many (shown with «todos»). */
+  last_broadcast: boolean;
+  /** When the person saw the last message, when it was the team's. */
+  last_seen_at: string | null;
 };
 export type ThreadRow = {
   id: string;
@@ -418,7 +422,7 @@ export const api = {
   grantPremium: (email: string, months: number | null) =>
     call<string>('admin_grant_premium', { p_email: email, p_months: months }),
   revokePremium: (id: string) => call<null>('admin_revoke_premium', { p_user: id }),
-  inbox: () => call<InboxRow[]>('admin_feedback_inbox', { p_limit: 200 }),
+  inbox: (all = false) => call<InboxRow[]>('admin_feedback_inbox', { p_limit: 500, p_all: all }),
   thread: (id: string) => call<ThreadRow[]>('admin_feedback_thread', { p_user: id }),
   broadcasts: () => call<Broadcast[]>('admin_broadcasts'),
   broadcastRecipients: (id: string) => call<BroadcastRecipient[]>('admin_broadcast_recipients', { p_id: id }),

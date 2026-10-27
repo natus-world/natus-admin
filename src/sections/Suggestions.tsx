@@ -13,7 +13,8 @@ import { ErrorNote, Loading, Section, messageOf, useAsync } from '../ui';
 export function Suggestions({ onOpenPerson, segment }: { onOpenPerson: (id: string) => void; segment?: Segment }) {
   const [tab, setTab] = useState<'conv' | 'todos'>('conv');
   const [open, setOpen] = useState<string | null>(null);
-  const inbox = useAsync(() => api.inbox(), []);
+  const [all, setAll] = useState(false);
+  const inbox = useAsync(() => api.inbox(all), [all]);
   const sent = useAsync(() => api.broadcasts(), []);
   const conv = inbox.data ?? [];
   const unread = conv.reduce((n, r) => n + Number(r.unread), 0);
@@ -31,7 +32,19 @@ export function Suggestions({ onOpenPerson, segment }: { onOpenPerson: (id: stri
 
       {tab === 'conv' ? (
         <div className="split">
-          <Section title={unread > 0 ? `${int(unread)} sin leer` : 'Conversaciones'}>
+          <Section
+            title={unread > 0 ? `${int(unread)} sin leer` : 'Conversaciones'}
+            aside={
+              <div className="seg" role="group" aria-label="Quiénes">
+                <button type="button" className={all ? '' : 'on'} onClick={() => setAll(false)}>
+                  Escribieron
+                </button>
+                <button type="button" className={all ? 'on' : ''} onClick={() => setAll(true)}>
+                  Todos
+                </button>
+              </div>
+            }
+          >
             {inbox.error && <ErrorNote>{inbox.error}</ErrorNote>}
             {inbox.loading && !inbox.data ? (
               <Loading />
@@ -51,6 +64,10 @@ export function Suggestions({ onOpenPerson, segment }: { onOpenPerson: (id: stri
                         {r.last_body}
                       </span>
                       <span className="inbox-tags">
+                        {r.last_broadcast && <span className="tag">Mensaje a todos</span>}
+                        {r.last_author === 'team' && (
+                          <span className={`small ${r.last_seen_at ? 'ok' : 'muted'}`}>{r.last_seen_at ? '✓ visto' : 'no lo ha visto'}</span>
+                        )}
                         {Number(r.unread) > 0 && <span className="tag gift">{int(Number(r.unread))} sin leer</span>}
                         {r.crisis && <span className="tag alert">Señal de crisis</span>}
                       </span>
@@ -59,7 +76,11 @@ export function Suggestions({ onOpenPerson, segment }: { onOpenPerson: (id: stri
                 ))}
               </ul>
             )}
-            <p className="small muted">Solo quienes escribieron o a quienes respondiste. Los mensajes a todos están en la otra pestaña.</p>
+            <p className="small muted">
+              {all
+                ? 'Todas las personas a las que el equipo les ha escrito, también solo con un mensaje a todos.'
+                : 'Solo quienes escribieron o a quienes respondiste. «Todos» suma a quienes solo recibieron un mensaje a todos.'}
+            </p>
           </Section>
           {open ? (
             <Thread key={open} id={open} onSent={inbox.reload} onOpenPerson={onOpenPerson} />
@@ -76,7 +97,8 @@ export function Suggestions({ onOpenPerson, segment }: { onOpenPerson: (id: stri
           loading={sent.loading && !sent.data}
           error={sent.error}
           onSent={sent.reload}
-          onOpenConversation={(id) => {
+          onOpenConversation={(id, answered) => {
+            if (!answered) setAll(true);
             setOpen(id);
             setTab('conv');
           }}
@@ -162,7 +184,7 @@ function Everybody({ segment, list, loading, error, onSent, onOpenConversation }
   loading: boolean;
   error: string | null;
   onSent: () => void;
-  onOpenConversation: (id: string) => void;
+  onOpenConversation: (id: string, answered: boolean) => void;
 }) {
   return (
     <div className="stack">
@@ -263,7 +285,7 @@ function Compose({ segment, onSent }: { segment?: Segment; onSent: () => void })
   );
 }
 
-function BroadcastItem({ b, onOpenConversation }: { b: Broadcast; onOpenConversation: (id: string) => void }) {
+function BroadcastItem({ b, onOpenConversation }: { b: Broadcast; onOpenConversation: (id: string, answered: boolean) => void }) {
   const [open, setOpen] = useState(false);
   const [full, setFull] = useState(false);
   const recipients = Number(b.recipients);
@@ -307,7 +329,7 @@ function BroadcastItem({ b, onOpenConversation }: { b: Broadcast; onOpenConversa
   );
 }
 
-function Recipients({ id, onOpenConversation }: { id: string; onOpenConversation: (id: string) => void }) {
+function Recipients({ id, onOpenConversation }: { id: string; onOpenConversation: (id: string, answered: boolean) => void }) {
   const list = useAsync(() => api.broadcastRecipients(id), [id]);
   if (list.error) return <ErrorNote>{list.error}</ErrorNote>;
   if (!list.data) return <Loading />;
@@ -325,14 +347,16 @@ function Recipients({ id, onOpenConversation }: { id: string; onOpenConversation
           {list.data.map((r) => (
             <tr key={r.user_id}>
               <td>
-                {r.name ?? 'Sin nombre'}
+                <button type="button" className="link" onClick={() => onOpenConversation(r.user_id, r.answered)}>
+                  {r.name ?? 'Sin nombre'}
+                </button>
                 <br />
                 <span className="muted small">{r.email ?? '—'}</span>
               </td>
               <td>{r.read_at ? dateTime(r.read_at) : <span className="muted">todavía no</span>}</td>
               <td>
                 {r.answered ? (
-                  <button type="button" className="link small" onClick={() => onOpenConversation(r.user_id)}>
+                  <button type="button" className="link small" onClick={() => onOpenConversation(r.user_id, true)}>
                     Sí, ver la conversación →
                   </button>
                 ) : (
