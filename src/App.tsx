@@ -65,7 +65,8 @@ const SECTIONS: { key: string; label: string; group: string; question?: boolean;
     key: 'sugerencias',
     label: 'Sugerencias',
     group: 'Cuidado',
-    render: ({ nav }) => <Suggestions onOpenPerson={(id) => nav.open({ section: 'personas', id })} />,
+    segment: true,
+    render: ({ nav, view }) => <Suggestions segment={view.segment} onOpenPerson={(id) => nav.open({ section: 'personas', id })} />,
   },
   { key: 'gastos', label: 'Gastos fijos', group: 'Ajustes', render: () => <Expenses /> },
   {

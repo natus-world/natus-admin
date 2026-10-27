@@ -57,6 +57,12 @@ i18n-iso-countries for the codes); a row or a circle sets the filter.
 one table of the main numbers for the period, two a row, each with the
 period before when comparing; the «hoy» ones are today's state and carry no
 change. Monthly income is paying × US$ 10 (`PRICE_USD`).
+«Sugerencias» has two tabs (owner, 27 Oct 2026): «Conversaciones» (only
+people who wrote or were answered one by one, each team message with «Lo vio
+el…») and «Mensajes a todos» (each message to many with reached, saw and
+answered, who, and «Nuevo mensaje a todos»: write, preview as the person sees
+it, confirm the number, send to the accounts of the segment on top). Shows
+the segment bar.
 
 ## Adding something
 

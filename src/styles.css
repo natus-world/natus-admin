@@ -2368,3 +2368,86 @@ html:has(.app.v2) body {
     border-top: 1px solid var(--line);
   }
 }
+
+/* «Mensajes a todos» (owner, 27 Oct 2026). */
+.app.v2 .msg-seen {
+  margin: 4px 0 0;
+}
+.app.v2 .msg-seen.ok {
+  color: var(--good-ink);
+}
+.app.v2 .bcast-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.app.v2 .bcast {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+.app.v2 .bcast:first-child {
+  border-top: 0;
+  padding-top: 4px;
+}
+.app.v2 .bcast-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.app.v2 .bcast-body {
+  margin: 0;
+  max-width: 62em;
+}
+.app.v2 .bcast-body.clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.app.v2 .bcast-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 18px;
+  font-size: 14px;
+}
+.app.v2 .bcast-stats b {
+  font-weight: 500;
+}
+.app.v2 .bcast-bar {
+  position: relative;
+  width: 140px;
+  height: 8px;
+  background: var(--sunk);
+  border-radius: 0 4px 4px 0;
+}
+.app.v2 .bcast-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--s1);
+  border-radius: 0 4px 4px 0;
+}
+.app.v2 .bcast-preview {
+  max-width: 420px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgb(var(--v) / 0.6);
+  border: 1px solid var(--glass-border);
+}
+.app.v2 .bcast-preview-who {
+  margin: 0 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.app.v2 .bcast-preview .pre {
+  margin: 0;
+  font: 400 17px/1.5 var(--serif);
+}

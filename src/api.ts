@@ -165,7 +165,24 @@ export type ThreadRow = {
   screen: string | null;
   crisis_flagged: boolean;
   created_at: string;
+  /** When the person opened it (team messages only). */
+  read_at: string | null;
+  /** Part of a message to many. */
+  broadcast: boolean;
 };
+/** A message the team sent to many at once (owner, 27 Oct 2026). */
+export type Broadcast = {
+  id: string;
+  created_at: string;
+  author_name: string | null;
+  body: string;
+  personalized: boolean;
+  segment: Segment;
+  recipients: number;
+  seen: number;
+  answered: number;
+};
+export type BroadcastRecipient = { user_id: string; name: string | null; email: string | null; read_at: string | null; answered: boolean };
 export type ContentKind =
   | 'chat'
   | 'journal'
@@ -403,6 +420,10 @@ export const api = {
   revokePremium: (id: string) => call<null>('admin_revoke_premium', { p_user: id }),
   inbox: () => call<InboxRow[]>('admin_feedback_inbox', { p_limit: 200 }),
   thread: (id: string) => call<ThreadRow[]>('admin_feedback_thread', { p_user: id }),
+  broadcasts: () => call<Broadcast[]>('admin_broadcasts'),
+  broadcastRecipients: (id: string) => call<BroadcastRecipient[]>('admin_broadcast_recipients', { p_id: id }),
+  broadcastAudience: () => call<number>('admin_broadcast_audience'),
+  broadcastSend: (body: string, expected: number) => call<number>('admin_broadcast_send', { p_body: body, p_expected: expected }),
   reply: (id: string, body: string) => call<string>('admin_feedback_reply', { p_user: id, p_body: body }),
   growth: (weeks: number) => call<Growth[]>('admin_growth', { p_weeks: weeks }),
   cohortCurve: (weeks: number) => call<CohortPoint[]>('admin_cohort_curve', { p_weeks: weeks }),

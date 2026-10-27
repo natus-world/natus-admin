@@ -35,6 +35,9 @@ const KNOWN: Record<string, string> = {
   already_paying: 'Esa persona ya paga Premium con PayPal.',
   not_gifted: 'Esa persona no tiene Premium regalado.',
   months_out_of_range: 'Elige entre 1 y 36 meses.',
+  audience_changed: 'Cambió cuántas personas lo recibirían. Revisa el número y vuelve a confirmar.',
+  bad_body: 'Escribe el mensaje (hasta 4.000 caracteres).',
+  nobody: 'Nadie lo recibiría con este segmento.',
 };
 
 export function messageOf(e: unknown): string {
