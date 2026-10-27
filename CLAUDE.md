@@ -62,7 +62,19 @@ people who wrote or were answered one by one, each team message with «Lo vio
 el…») and «Mensajes a todos» (each message to many with reached, saw and
 answered, who, and «Nuevo mensaje a todos»: write, preview as the person sees
 it, confirm the number, send to the accounts of the segment on top). Shows
-the segment bar.
+the segment bar. «Conversaciones» opens on «Escribieron»; «Todos» adds
+whoever only received a message to many, and a name in «Ver quiénes» opens
+their conversation.
+
+## A new version is announced (owner, 27 Oct 2026)
+
+A cached panel once showed the old Sugerencias over the new database
+functions. Each build now has an id (`GITHUB_SHA`, else the time) in the
+bundle and in `/version.json` (`vite.config.ts`); `NewVersion.tsx` asks for
+it every five minutes and when the tab comes back, and when it differs shows
+«Hay una versión nueva del panel» with «Recargar» — never reloading by
+itself, so a reply being written is not lost. Publish the database first and
+the panel after, as the CI already orders natus-mvp's.
 
 ## Adding something
 
