@@ -104,6 +104,7 @@ export const PURPOSE: Record<string, string> = {
   memory: 'Memoria',
   chart_points: 'Lectura de la carta',
   daily_tip: 'Tip del día',
+  voice: 'Voz de las meditaciones',
 };
 
 export const SURFACE: Record<string, string> = {
