@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from 'react';
-import { api, type ContentKind, type PersonSummary, type PersonRow, type Friendship, type PersonChart } from '../api';
+import { api, type ContentKind, type PersonSummary, type PersonRow, type Friendship, type PersonChart, type ChartPoint } from '../api';
 import { Def } from '../charts';
 import { date, dateTime, int, usd } from '../format';
 import {
@@ -315,6 +315,12 @@ function ChartView({ id }: { id: string }) {
   const points = c.chart?.points ?? [];
   const reading = new Map((c.readings ?? []).map((r) => [r.point, r.text]));
   const hasHour = c.has_birth_time ?? c.chart?.has_birth_time ?? false;
+  // Davraz reads the stored system (Placidus since 30 Oct 2026); the table shows
+  // the houses as the person chose to see them, and says which (owner).
+  const stored = c.house_system ?? c.chart?.house_system ?? 'whole_sign';
+  const view = stored === 'placidus' && c.house_view === 'whole_sign' ? 'whole_sign' : stored;
+  const houseOf = (pt: ChartPoint) => (view === 'whole_sign' && stored === 'placidus' ? (pt.whole_sign_house ?? null) : pt.house);
+  const SYSTEM = { placidus: 'Placidus', whole_sign: 'signo entero' } as const;
   const warnings: string[] = [];
   if (!c.chart) warnings.push('No tiene carta guardada: solo números.');
   if (b.city && !place) warnings.push('Escribió la ciudad pero no la eligió de la lista: el lugar se buscó por el nombre.');
@@ -337,8 +343,17 @@ function ChartView({ id }: { id: string }) {
         )}
         <dt>Calculada el</dt>
         <dd>
-          {dateTime(c.calculated_at)} · casas enteras · {str(c.provider)} {c.chart?.version ? `· ${c.chart.version}` : ''}
+          {dateTime(c.calculated_at)} · casas en {SYSTEM[stored]} · {str(c.provider)} {c.chart?.version ? `· ${c.chart.version}` : ''}
         </dd>
+        {hasHour && (
+          <>
+            <dt>Ve sus casas en</dt>
+            <dd>
+              {SYSTEM[view]}
+              {view !== stored && <span className="muted"> · Davraz las lee en {SYSTEM[stored]}</span>}
+            </dd>
+          </>
+        )}
         {c.chart?.ascendant && (
           <>
             <dt>Ascendente</dt>
@@ -371,7 +386,7 @@ function ChartView({ id }: { id: string }) {
                 <th>Punto</th>
                 <th>Signo</th>
                 <th className="num">Grado</th>
-                <th className="num">Casa</th>
+                <th className="num">Casa{hasHour ? ` (${SYSTEM[view]})` : ''}</th>
                 <th className="reading-cell">La lectura de Davraz</th>
               </tr>
             </thead>
@@ -386,7 +401,7 @@ function ChartView({ id }: { id: string }) {
                   </td>
                   <td>{label(SIGN, pt.sign)}</td>
                   <td className="num">{deg(pt.degree)}</td>
-                  <td className="num">{pt.house ?? '—'}</td>
+                  <td className="num">{houseOf(pt) ?? '—'}</td>
                   <td className="small reading-cell">{reading.get(pt.name) ?? <span className="muted">—</span>}</td>
                 </tr>
                 {reading.has(pt.name) && (

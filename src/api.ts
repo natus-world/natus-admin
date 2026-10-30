@@ -291,6 +291,8 @@ export type ChartPoint = {
   longitude: number;
   retrograde: boolean;
   house: number | null;
+  /** House by whole sign, since Placidus (30 Oct 2026); absent in charts not yet rebuilt. */
+  whole_sign_house?: number | null;
   dignity: string | null;
 };
 export type PersonChart = {
@@ -304,6 +306,7 @@ export type PersonChart = {
   };
   chart: {
     version?: string;
+    house_system?: 'placidus' | 'whole_sign';
     has_birth_time?: boolean;
     points?: ChartPoint[];
     ascendant?: { sign: string; degree: number } | null;
@@ -312,6 +315,9 @@ export type PersonChart = {
     aspects?: { a: string; b: string; type: string; separation: number }[];
   } | null;
   has_birth_time: boolean | null;
+  /** The system the stored houses are in, and the one the person chose to see (owner, 30 Oct 2026). */
+  house_system?: 'placidus' | 'whole_sign' | null;
+  house_view?: 'placidus' | 'whole_sign';
   provider: string | null;
   calculated_at: string | null;
   readings: { point: string; text: string }[] | null;
